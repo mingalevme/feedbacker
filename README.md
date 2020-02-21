@@ -1,5 +1,5 @@
 # Feedbacker
-Example of an API application written in Go (router, database + migrations, json request/response, task queues)
+Example of a simple HTTP API application written in Go (router, database + migrations, json request/response, task queues)
 
 # Run PostgreSQL
 ```
