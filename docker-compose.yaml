@@ -1,0 +1,25 @@
+version: '2'
+services:
+  app:
+    build: .
+    environment:
+      - DB_HOST=mfeed-feedback-go
+      - DB_PORT=5432
+      - DB_DATABASE=mfeed-feedback
+      - DB_USERNAME=mfeed-feedback
+      - DB_PASSWORD=mfeed-feedback
+      - DEBUG=true
+    depends_on:
+      - database
+    ports:
+      - 8080:8000
+    volumes:
+      - ./:/code
+  database:
+    image: postgres:latest
+    environment:
+      - TEST=TEST
+    ports:
+      - 5432:5432
+    volumes:
+      - ./data:/var/lib/mysql
