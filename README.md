@@ -1,7 +1,7 @@
 # Feedbacker
 Example of a simple HTTP API application written in Go (router, database + migrations, json request/response, task queues)
 
-# Run PostgreSQL
+# Examples of running PostgreSQL via Docker
 ```
 docker run -d --restart=always --name feedbacker-postgres postgres
 # or
@@ -10,14 +10,14 @@ docker run -d --restart=always --name feedbacker-postgres postgres
 #docker run -d --restart=always -p "${FEEDBACKER_DB_PORT}:5432" --name "${FEEDBACKER_DB_HOST}" postgres
 ```
 
-# Remove PostgreSQL
+# Examples of (force) deleting PostgreSQL via Docker
 ```
 docker rm --force feedbacker-postgresql
 ```
 
-# Migations
+# Migrations (https://github.com/golang-migrate/migrate) via Docker
 
-## Create migration
+## Create a migration
 ```
 docker run -rm -v "${PWD}/db/migrations:/migrations" --network host migrate/migrate -path=/migrations create -ext sql -dir /migrations -seq create_feedback_table
 ```
@@ -25,7 +25,7 @@ docker run -rm -v "${PWD}/db/migrations:/migrations" --network host migrate/migr
 ## Run migrations
 ```
 docker run --rm -v "${PWD}/db/migrations:/migrations" --network host migrate/migrate -path=/migrations -database "postgres://postgres@localhost:5432/postgres?sslmode=disable" up
-# Or via linking
+# Or via linking (depreacted, use custom networks)
 #docker run --rm -v "${PWD}/db/migrations:/migrations" --link="feedbacker-postgres:postgres" migrate/migrate -path=/migrations -database "postgres://postgres@postgres/postgres?sslmode=disable" up
 ```
 
