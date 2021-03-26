@@ -8,7 +8,7 @@ import (
 )
 
 func ping(w http.ResponseWriter, r *http.Request) error {
-	w.Write([]byte("Pong"))
+	_, _ = w.Write([]byte("Pong"))
 	return nil
 }
 

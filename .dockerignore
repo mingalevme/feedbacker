@@ -1,0 +1,9 @@
+.DS_Store/
+Dockerfile
+.dockerignore
+.gitignore
+.env
+*.md
+.git/
+.idea/
+feedbacker

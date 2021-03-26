@@ -1,60 +1,25 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"github.com/mingalevme/feedbacker/infrastructure"
+	"github.com/pkg/errors"
 )
 
 var env = NewEnv()
 
 func main() {
 
-	host := env.GetEnv("FEEDBACKER_HOST", "")
-	port := env.GetEnv("FEEDBACKER_PORT", "8080")
-
-	r := mux.NewRouter()
-
-	r.Handle("/ping", HttpRequestHandler{ping}).Methods("GET")
-	r.Handle("/feedback", HttpRequestHandler{store}).Methods("POST")
-
-	server := &http.Server{
-		Handler:      r,
-		Addr:         fmt.Sprintf("%s:%s", host, port),
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-	}
+	server := InitializeHttpServer()
 
 	go func() {
-		env.Logger().Infof("Starting on http://%s:%s", host, port)
+		infrastructure.GetLogger().Infof("Starting on http://%s", server.Addr)
 		if err := server.ListenAndServe(); err != nil {
-			env.Logger().Fatal(err)
+			env.Logger().Fatal(errors.Wrap(err, "Error while listening and serving"))
 		}
 	}()
 
 	// Graceful Shutdown
-	waitForShutdown(server)
+	server.WaitForShutdown()
 
-}
-
-func waitForShutdown(server *http.Server) {
-	interruptChan := make(chan os.Signal, 1)
-	signal.Notify(interruptChan, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-
-	// Block until we receive our signal.
-	<-interruptChan
-
-	// Create a deadline to wait for.
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
-	server.Shutdown(ctx)
-
-	env.Logger().Info("Shutting down")
-	os.Exit(0)
 }

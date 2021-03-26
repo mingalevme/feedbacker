@@ -2,20 +2,24 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/lib/pq"
+	"github.com/mingalevme/feedbacker/domain/feedback"
+	"github.com/mingalevme/feedbacker/infrastructure/persistence/db"
+	"github.com/mingalevme/feedbacker/infrastructure/utils"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"strconv"
 	"strings"
-	"fmt"
-	"github.com/pkg/errors"
 )
 
 type Env struct {
-	environ                  map[string]string
+	environment              map[string]string
 	db                       *sql.DB
 	logger                   *log.Logger
 	debug                    *bool
+	feedbackRepository       *feedback.Repository
 	maxPostRequestBodyLength *uint
 }
 
@@ -27,13 +31,13 @@ func NewEnv() *Env {
 		m[variable[0]] = variable[1]
 	}
 	env := &Env{
-		environ: m,
+		environment: m,
 	}
 	return env
 }
 
 func (e *Env) GetEnv(key string, fallback string) string {
-	val, ok := e.environ[key]
+	val, ok := e.environment[key]
 	if ok && val != "" {
 		e.Logger().Debugf("Environment variable \"%s\" is set: \"%s\"", key, val)
 		return val
@@ -44,13 +48,13 @@ func (e *Env) GetEnv(key string, fallback string) string {
 }
 
 func (e *Env) Db() *sql.DB {
-	if e.db == nil {
-		e.db = e.initDb()
-	}
-	return e.db
+	return e.getDbConnection()
 }
 
-func (e *Env) initDb() *sql.DB {
+func (e *Env) getDbConnection() *sql.DB {
+	if e.db != nil {
+		return e.db
+	}
 	params := map[string]interface{}{
 		"Host":     e.GetEnv("FEEDBACKER_DB_HOST", "127.0.0.1"),
 		"Port":     e.GetEnv("FEEDBACKER_DB_PORT", "5432"),
@@ -58,7 +62,7 @@ func (e *Env) initDb() *sql.DB {
 		"Pass":     e.GetEnv("FEEDBACKER_DB_PASSWORD", "postgres"),
 		"Database": e.GetEnv("FEEDBACKER_DB_NAME", "postgres"),
 	}
-	dataSourceName := Sprintf("postgres://%{User}s:%{Pass}s@%{Host}s:%{Port}s/%{Database}s?sslmode=disable", params)
+	dataSourceName := utils.Sprintf("postgres://%{User}s:%{Pass}s@%{Host}s:%{Port}s/%{Database}s?sslmode=disable", params)
 	e.Logger().Infof("Connecting to database: %s", dataSourceName)
 	connection, err := sql.Open("postgres", dataSourceName)
 	if err != nil {
@@ -69,7 +73,8 @@ func (e *Env) initDb() *sql.DB {
 	} else {
 		e.Logger().Info("Connection to database has been established successfully")
 	}
-	return connection
+	e.db = connection
+	return e.db
 }
 
 func (e *Env) Logger() *log.Logger {
@@ -84,6 +89,10 @@ func (e *Env) Logger() *log.Logger {
 		}
 	}
 	return e.logger
+}
+
+func (e *Env) GetFeedbackRepository() feedback.Repository {
+	return db.NewFeedbackRepository(e.getDbConnection())
 }
 
 func (e *Env) Debug() bool {
