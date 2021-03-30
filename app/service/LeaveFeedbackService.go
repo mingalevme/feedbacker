@@ -9,8 +9,8 @@ type LeaveFeedbackData struct {
 	Service  string                    `json:"service,omitempty"`
 	Edition  string                    `json:"edition,omitempty"`
 	Text     string                    `json:"text,omitempty"`
-	Customer LeaveFeedbackCustomerData `json:"customer,omitempty"`
-	Context  LeaveFeedbackContextData  `json:"context,omitempty"`
+	Customer *LeaveFeedbackCustomerData `json:"customer,omitempty"`
+	Context  *LeaveFeedbackContextData  `json:"context,omitempty"`
 }
 
 type LeaveFeedbackCustomerData struct {
@@ -41,10 +41,10 @@ func NewLeaveFeedbackService(repository feedback.Repository, logger log.Logger) 
 		repository: repository,
 		logger: logger,
 	}
-	return service
+	return &service
 }
 
-func (s leaveFeedbackService) Handle(data LeaveFeedbackData) (feedback.FeedbackData, error) {
+func (s* leaveFeedbackService) Handle(data LeaveFeedbackData) (feedback.FeedbackData, error) {
 	serviceValue, err := feedback.NewServiceValue(data.Service)
 	if err != nil {
 		return nil, err
@@ -57,13 +57,19 @@ func (s leaveFeedbackService) Handle(data LeaveFeedbackData) (feedback.FeedbackD
 	if err != nil {
 		return nil, err
 	}
-	customer, err := feedback.NewCustomer(data.Customer.Email, data.Customer.InstallationID)
-	if err != nil {
-		return nil, err
+	var customer feedback.Customer
+	if data.Customer != nil {
+		customer, err = feedback.NewCustomer(data.Customer.Email, data.Customer.InstallationID)
+		if err != nil {
+			return nil, err
+		}
 	}
-	context, err := feedback.NewContext(data.Context.AppVersion, data.Context.AppBuild, data.Context.OsName, data.Context.OsVersion, data.Context.DeviceBrand, data.Context.DeviceModel)
-	if err != nil {
-		return nil, err
+	var context feedback.Context
+	if data.Context != nil {
+		context, err = feedback.NewContext(data.Context.AppVersion, data.Context.AppBuild, data.Context.OsName, data.Context.OsVersion, data.Context.DeviceBrand, data.Context.DeviceModel)
+		if err != nil {
+			return nil, err
+		}
 	}
 	f, err := s.repository.Add(serviceValue, editionValue, textValue, customer, context)
 	if err != nil {

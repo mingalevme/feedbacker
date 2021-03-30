@@ -7,11 +7,18 @@ import (
 	"time"
 )
 
+var ErrNotFound = errors.New("model is not found")
+
+// https://stackoverflow.com/a/39280987/1046909
 type Repository interface {
-	Add(service ServiceValue, Edition EditionValue, text TextValue, customer Customer, context Context) (Feedback, error)
+	Add(service ServiceValue, edition EditionValue, text TextValue, customer Customer, context Context) (Feedback, error)
+	CreateItem(service ServiceValue, edition EditionValue, text TextValue, customer Customer, context Context) (FeedbackId, time.Time, error)
+	GetById(id FeedbackId) (Feedback, error)
 }
 
-type AbstractRepository struct {}
+type AbstractRepository struct {
+	Repository
+}
 
 func (s *AbstractRepository) Add(service ServiceValue, edition EditionValue, text TextValue, customer Customer, context Context) (Feedback, error) {
 	id, createdAt, err := s.CreateItem(service, edition, text, customer, context)
@@ -32,8 +39,3 @@ func (s *AbstractRepository) Add(service ServiceValue, edition EditionValue, tex
 		data,
 	}, nil
 }
-
-func (s *AbstractRepository) CreateItem(service ServiceValue, edition EditionValue, text TextValue, customer Customer, context Context) (feedbackId FeedbackId, createdAt time.Time, err error) {
-	panic("Method is not implemented")
-}
-

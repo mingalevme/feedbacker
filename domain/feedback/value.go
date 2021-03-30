@@ -42,12 +42,25 @@ type FeedbackId interface {
 	Get() int
 }
 
-func NewFeedbackId(id int) (FeedbackId, error) {
-	if id < 1 {
+func NewFeedbackId(id interface{}) (FeedbackId, error) {
+	var value int
+	var err error
+	switch v := id.(type) {
+	case int:
+		value = v
+	case string:
+		value, err = strconv.Atoi(v)
+		if err != nil {
+			return nil, IdIsInvalid
+		}
+	default:
+		return nil, IdIsInvalid
+	}
+	if value < 1 {
 		return nil, IdIsInvalid
 	}
 	return &feedbackId{
-		value: id,
+		value: value,
 	}, nil
 }
 

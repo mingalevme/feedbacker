@@ -30,21 +30,22 @@ func New() EnvVarBag {
 		variable := strings.Split(element, "=")
 		m[variable[0]] = variable[1]
 	}
-	return &env{
+	instance = &env{
 		environment: m,
 	}
+	return instance
 }
 
-//
-//var instance EnvVarBag
-//
-//func GetDefault() EnvVarBag {
-//	if instance == nil {
-//		instance = New()
-//	}
-//	return instance
-//}
-//
+
+var instance EnvVarBag
+
+func GetInstance() EnvVarBag {
+	if instance == nil {
+		return New()
+	}
+	return instance
+}
+
 // Quick Accessor
 //func GetEnvValue(key string, fallback string) string {
 //	return GetDefault().Get(key, fallback)

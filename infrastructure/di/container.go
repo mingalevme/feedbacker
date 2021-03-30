@@ -4,8 +4,7 @@ import (
 	"database/sql"
 	"github.com/mingalevme/feedbacker/app/service"
 	"github.com/mingalevme/feedbacker/domain/feedback"
-	"github.com/mingalevme/feedbacker/infrastructure/cfg"
-	"github.com/mingalevme/feedbacker/infrastructure/env"
+	"github.com/mingalevme/feedbacker/infrastructure/config"
 	"github.com/mingalevme/feedbacker/infrastructure/log"
 	"github.com/mingalevme/feedbacker/infrastructure/persistence"
 	"github.com/mingalevme/feedbacker/infrastructure/persistence/db"
@@ -19,49 +18,58 @@ type Container interface {
 	GetFeedbackRepository() feedback.Repository
 	GetLogger() log.Logger
 	GetLeaveFeedbackService() service.LeaveFeedbackService
+	GetViewFeedbackService() service.ViewFeedbackService
 }
 
 type container struct {
-	config               cfg.Config
+	config               config.Config
 	logger               log.Logger
 	feedbackRepository   feedback.Repository
 	db                   *sql.DB
 	leaveFeedbackService service.LeaveFeedbackService
+	viewFeedbackService  service.ViewFeedbackService
 }
 
-func New(config cfg.Config) Container {
-	return &container{
+func New(config config.Config) Container {
+	instance = &container{
 		config: config,
 	}
+	return instance
 }
 
 func (s *container) GetLogger() log.Logger {
-	if s.logger == nil {
-		logger := logrus.New()
-		// @TODO: parse environment
-		logger.SetOutput(os.Stdout)
-		if level, err := logrus.ParseLevel(s.config.GetEnvVar("LOG_LEVEL", "debug")); err != nil {
-			panic(errors.Wrap(err, "Error while parsing log level"))
-		} else {
-			logger.SetLevel(level)
-		}
-		s.logger = logger
+	if s.logger != nil {
+		return s.logger
 	}
+	logger := logrus.New()
+	// @TODO: parse environment
+	logger.SetOutput(os.Stdout)
+	if level, err := logrus.ParseLevel(s.config.GetEnvVar("LOG_LEVEL", "info")); err != nil {
+		panic(errors.Wrap(err, "Error while parsing log level"))
+	} else {
+		logger.SetLevel(level)
+	}
+	s.logger = logger
 	return s.logger
 }
 
 func (s *container) GetFeedbackRepository() feedback.Repository {
+	if s.feedbackRepository != nil {
+		return s.feedbackRepository
+	}
 	driver := s.config.GetEnvVar("PERSISTENCE_DRIVER", "database")
 	if driver == "database" {
 		connection, err := s.getDatabaseConnection()
 		if err != nil {
 			panic(errors.Wrap(err, "Error while initializing connection to database"))
 		}
-		return db.NewFeedbackRepository(connection)
+		s.feedbackRepository = db.NewFeedbackRepository(connection)
 	} else if driver == "logger" {
-		return persistence.NewLoggerFeedbackRepository(s.GetLogger())
+		s.feedbackRepository = persistence.NewArrayFeedbackRepository(s.GetLogger())
+	} else {
+		panic(errors.Errorf("Unsupported persistence driver: %s", driver))
 	}
-	panic(errors.Errorf("Unsupported persistence driver: %s", driver))
+	return s.feedbackRepository
 }
 
 func (s *container) GetLeaveFeedbackService() service.LeaveFeedbackService {
@@ -69,6 +77,13 @@ func (s *container) GetLeaveFeedbackService() service.LeaveFeedbackService {
 		s.leaveFeedbackService = service.NewLeaveFeedbackService(s.GetFeedbackRepository(), s.GetLogger())
 	}
 	return s.leaveFeedbackService
+}
+
+func (s *container) GetViewFeedbackService() service.ViewFeedbackService {
+	if s.viewFeedbackService == nil {
+		s.viewFeedbackService = service.NewViewFeedbackService(s.GetFeedbackRepository(), s.GetLogger())
+	}
+	return s.viewFeedbackService
 }
 
 func (s *container) getDatabaseConnection() (*sql.DB, error) {
@@ -96,9 +111,9 @@ func (s *container) getDatabaseConnection() (*sql.DB, error) {
 
 var instance Container
 
-func GetDefault() Container {
+func GetInstance() Container {
 	if instance == nil {
-		instance = New(cfg.New(env.New()))
+		New(config.GetInstance())
 	}
 	return instance
 }
