@@ -1,10 +1,27 @@
 package feedback
 
 import (
+	"github.com/pkg/errors"
 	"regexp"
 	"strconv"
 	"strings"
 )
+
+//var ErrUnprocessableEntity = errors.New("unprocessable entity")
+
+//var IdIsInvalid = errors.Wrap(ErrUnprocessableEntity, "id is invalid")
+//var ServiceIsInvalid = errors.Wrap(ErrUnprocessableEntity, "service is invalid")
+//var EditionIsInvalid = errors.Wrap(ErrUnprocessableEntity, "edition is invalid")
+//var TextIsInvalid = errors.Wrap(ErrUnprocessableEntity, "text is invalid")
+//var TextIsEmpty = errors.Wrap(ErrUnprocessableEntity, "text is empty")
+
+var IdIsInvalid = errors.New("id is invalid")
+var ServiceIsInvalid = errors.New("service is invalid")
+var EditionIsInvalid = errors.New("edition is invalid")
+var TextIsInvalid = errors.New("text is invalid")
+var TextIsEmpty = errors.New("text is empty")
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 type valueObject interface {
 	Equals(value interface{}) bool

@@ -41,15 +41,15 @@ func (s *container) GetLogger() log.Logger {
 	if s.logger != nil {
 		return s.logger
 	}
-	logger := logrus.New()
+	logrusLogger := logrus.New()
 	// @TODO: parse environment
-	logger.SetOutput(os.Stdout)
+	logrusLogger.SetOutput(os.Stdout)
 	if level, err := logrus.ParseLevel(s.config.GetEnvVar("LOG_LEVEL", "info")); err != nil {
 		panic(errors.Wrap(err, "Error while parsing log level"))
 	} else {
-		logger.SetLevel(level)
+		logrusLogger.SetLevel(level)
 	}
-	s.logger = logger
+	s.logger = log.NewLogrusLogger(logrusLogger)
 	return s.logger
 }
 

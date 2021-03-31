@@ -41,7 +41,7 @@ func NewViewFeedbackService(repository feedback.Repository, logger log.Logger) V
 func (s *viewFeedbackService) Handle(data ViewFeedbackData) (feedback.FeedbackData, error) {
 	id, err := feedback.NewFeedbackId(data.Id)
 	if err != nil {
-		return nil, errors.Wrap(ErrUnprocessableEntity, "id is invalid")
+		return nil, errors.Wrap(ErrUnprocessableEntity, err.Error())
 	}
 	f, err := s.repository.GetById(id)
 	if errors.Is(err, feedback.ErrNotFound) {

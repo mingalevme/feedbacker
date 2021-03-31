@@ -2,16 +2,6 @@
 
 package feedback
 
-import (
-	"github.com/pkg/errors"
-)
-
-var IdIsInvalid = errors.New("id is invalid")
-var ServiceIsInvalid = errors.New("service is invalid")
-var EditionIsInvalid = errors.New("edition is invalid")
-var TextIsInvalid = errors.New("text is invalid")
-var TextIsEmpty = errors.New("text is empty")
-
 type Feedback interface {
 	FeedbackData
 	SetService(value ServiceValue)
