@@ -8,8 +8,5 @@ import (
 )
 
 func NewEnv(values map[string]string) *app.Container {
-	if values == nil {
-		values = map[string]string{}
-	}
-	return app.NewEnv(envvarbag.NewWithValues(values))
+	return app.NewEnv(envvarbag.New().With(values))
 }

@@ -27,7 +27,7 @@ func (s *Container) DBUser() string {
 }
 
 func (s *Container) DBPass() string {
-	return s.EnvVarBag.Get("DB_PASSWORD", "postgres")
+	return s.EnvVarBag.Get("DB_PASS", "postgres")
 }
 
 func (s *Container) DBName() string {

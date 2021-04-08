@@ -39,9 +39,75 @@ docker run --rm -v "${PWD}/db/migrations:/migrations" --link="feedbacker-postgre
 docker run --rm -v "${PWD}/db/migrations:/migrations" --network host migrate/migrate -path=/migrations -database "postgres://postgres@localhost:54322/postgres?sslmode=disable" down -all
 ```
 
-## Run app
+## Run app (examples)
+
+### Local/Debug mode
+
+```go build -gcflags="all=-N -l"``` build with remote debug support
 
 
-# TODO
-- https://echo.labstack.com/guide
-- https://github.com/google/go-cloud/tree/master/wire
+#### Memory persistence driver
+```
+go build -gcflags="all=-N -l" && PERSISTENCE_DRIVER=array ./feedbacker
+```
+
+#### Database (PostgreSQL) persistence driver
+```
+go build -gcflags="all=-N -l" && PERSISTENCE_DRIVER=database DB_HOST=127.0.0.1 DB_PORT=5432 DB_USER=feedbacker DB_PASS=feedbacker DB_NAME=feedbacker ./feedbacker
+```
+
+#### Redis persistence driver
+```
+go build -gcflags="all=-N -l" && PERSISTENCE_DRIVER=redis REDIS_ADDR="127.0.0.1:6379" REDIS_PASS="xxx" REDIS_DB=1 ./feedbacker
+```
+
+#### Logging stdout channel
+```
+go build -gcflags="all=-N -l" && LOG_CHANNEL=stdout LOG_STDOUT_LEVEL=debug ./feedbacker
+```
+
+#### Logging Sentry channel
+```
+go build -gcflags="all=-N -l" && LOG_CHANNEL=sentry LOG_SENTRY_LEVEL=warning SENTRY_DSN="https://...ingest.sentry.io/..." ./feedbacker
+```
+
+#### Logging Rollbar channel
+```
+go build -gcflags="all=-N -l" && LOG_CHANNEL=rollbar LOG_ROLLBAR_LEVEL=error ROLLBAR_TOKEN="..." ./feedbacker
+```
+
+#### Logging stack channel
+```
+go build -gcflags="all=-N -l" && LOG_CHANNEL=stack LOG_STACK_CHANNELS="sentry,rollbar,stdout" LOG_SENTRY_LEVEL=warning LOG_ROLLBAR_LEVEL=error LOG_STDOUT_LEVEL=debug SENTRY_DSN="https://...ingest.sentry.io/..." ROLLBAR_TOKEN="..." ./feedbacker
+```
+
+#### Logging null channel
+```
+go build -gcflags="all=-N -l" && LOG_CHANNEL=null ./feedbacker
+```
+
+#### Notifying email channel
+```
+go build -gcflags="all=-N -l" && NOTIFIER_DRIVER=email NOTIFIER_EMAIL_TO=user@example.com ./feedbacker
+```
+
+#### Notifying memory channel
+```
+go build -gcflags="all=-N -l" && NOTIFIER_DRIVER=array ./feedbacker
+```
+
+#### Notifying null channel
+```
+go build -gcflags="all=-N -l" && NOTIFIER_DRIVER=null ./feedbacker
+```
+
+### Testing
+```
+go test -v -cover -tags testing ./...
+```
+
+### Docker (build & run)
+
+```
+docker build -t feedbacker . && docker run -e "PERSISTENCE_DRIVER=array" -e "LOG_CHANNEL=null" -e "NOTIFIER_DRIVER=null" -e "..." -it feedbacker
+```

@@ -8,6 +8,7 @@ import (
 
 type EnvVarBag interface {
 	Get(key string, fallback string) string
+	With(values map[string]string) EnvVarBag
 }
 
 type Bag struct {
@@ -23,15 +24,30 @@ func (s *Bag) Get(key string, fallback string) string {
 	}
 }
 
+func (s *Bag) With(values map[string]string) EnvVarBag {
+	bag := &Bag{
+		storage: map[string]string{},
+	}
+	for k, v := range s.storage {
+		 bag.storage[k] = v
+	}
+	if values != nil {
+		for k, v := range values {
+			bag.storage[k] = v
+		}
+	}
+	return bag
+}
+
 func New() *Bag {
 	// Make a copy of environment
-	m := map[string]string{}
+	storage := map[string]string{}
 	for _, element := range os.Environ() {
 		variable := strings.Split(element, "=")
-		m[variable[0]] = variable[1]
+		storage[variable[0]] = variable[1]
 	}
 	return &Bag{
-		storage: m,
+		storage: storage,
 	}
 }
 
