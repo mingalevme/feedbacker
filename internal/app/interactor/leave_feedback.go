@@ -7,27 +7,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-//type LeaveFeedbackService struct {
-//	logger log.Logger
-//}
-//
-//func NewLeaveFeedbackService(logger log.Logger) *LeaveFeedbackService {
-//	return &LeaveFeedbackService{
-//		logger: logger,
-//	}
-//}
-
-//NSDictionary *requiredParams = @{
-//@"app": AppConfig.instance.appName,
-//@"aversion": [NSBundle.mainBundle.infoDictionary objectForKey:@"CFBundleShortVersionString"],
-//@"bversion": [NSBundle.mainBundle.infoDictionary objectForKey:@"CFBundleVersion"],
-//@"osname": AppConfig.instance.platformName,
-//@"osversion": UIDevice.currentDevice.systemVersion,
-//@"brand": @"Apple",
-//@"model": AppConfig.instance.deviceModel,
-//@"body": text
-//}; + email + mark + edition + installation_id
-
 type LeaveFeedbackData struct {
 	App            string  `json:"app" xml:"app" param:"app" query:"app" form:"app"`
 	AppVersion     *string `json:"aversion" xml:"aversion" param:"aversion" query:"aversion" form:"aversion"`
@@ -87,7 +66,7 @@ func (s *Interactor) LeaveFeedback(input LeaveFeedbackData) (model.Feedback, err
 		return model.Feedback{}, err
 	}
 	data := convertLeaveFeedbackDataToAddFeedbackData(input)
-	f, err := s.container.GetFeedbackRepository().Add(data)
+	f, err := s.env.FeedbackRepository().Add(data)
 	if errors.Is(err, repository.ErrUnprocessableEntity) {
 		return f, ErrUnprocessableEntity
 	}
@@ -95,8 +74,8 @@ func (s *Interactor) LeaveFeedback(input LeaveFeedbackData) (model.Feedback, err
 		return f, err
 	}
 	//go func() {
-		if err := s.container.GetFeedbackLeftNotifier().Notify(f); err != nil {
-			s.container.GetLogger().WithError(err).Error("Error while feedback left notifying")
+		if err := s.env.Notifier().Notify(f); err != nil {
+			s.env.Logger().WithError(err).Error("Error while feedback left notifying")
 		}
 	//}()
 	return f, nil

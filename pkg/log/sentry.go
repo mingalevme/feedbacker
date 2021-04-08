@@ -9,9 +9,9 @@ import (
 
 type SentryLogger struct {
 	*AbstractLogger
-	hub *sentry.Hub
+	hub   *sentry.Hub
 	level Level
-	err error
+	err   error
 }
 
 func NewSentryLogger(hub *sentry.Hub, level Level) *SentryLogger {

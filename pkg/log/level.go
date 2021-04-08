@@ -17,11 +17,11 @@ const (
 )
 
 var levelMap = map[Level]int{
-	LevelDebug: 100,
-	LevelInfo: 200,
+	LevelDebug:   100,
+	LevelInfo:    200,
 	LevelWarning: 300,
-	LevelError: 400,
-	LevelFatal: 500,
+	LevelError:   400,
+	LevelFatal:   500,
 }
 
 func ParseLevel(lvl string) (Level, error) {

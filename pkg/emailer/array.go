@@ -2,7 +2,7 @@ package emailer
 
 import (
 	"fmt"
-	"github.com/mingalevme/feedbacker/internal/app/service/log"
+	"github.com/mingalevme/feedbacker/pkg/log"
 	"github.com/pkg/errors"
 )
 

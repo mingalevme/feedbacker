@@ -3,7 +3,7 @@ package notifier
 import (
 	"fmt"
 	"github.com/mingalevme/feedbacker/internal/app/model"
-	"github.com/mingalevme/feedbacker/internal/app/service/log"
+	"github.com/mingalevme/feedbacker/pkg/log"
 )
 
 type ArrayFeedbackLeftNotifier struct {

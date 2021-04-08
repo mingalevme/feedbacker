@@ -5,7 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"github.com/mingalevme/feedbacker/internal/app/model"
-	"github.com/mingalevme/feedbacker/internal/app/service/log"
+	"github.com/mingalevme/feedbacker/pkg/log"
 	"github.com/pkg/errors"
 	"time"
 )

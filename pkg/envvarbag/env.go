@@ -1,4 +1,4 @@
-package env
+package envvarbag
 
 import (
 	_ "github.com/lib/pq"

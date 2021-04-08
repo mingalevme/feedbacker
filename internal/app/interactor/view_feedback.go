@@ -6,7 +6,7 @@ import (
 )
 
 func (s *Interactor) ViewFeedback(id int) (model.Feedback, error) {
-	f, err := s.container.GetFeedbackRepository().GetById(id)
+	f, err := s.env.FeedbackRepository().GetById(id)
 	if err == repository.ErrNotFound {
 		return f, ErrNotFound
 	}

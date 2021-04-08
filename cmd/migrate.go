@@ -6,16 +6,15 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
-	"github.com/mingalevme/feedbacker/_ddd/infrastructure/env"
-	"github.com/mingalevme/feedbacker/internal/app/di"
-	"github.com/mingalevme/feedbacker/internal/config"
+	"github.com/mingalevme/feedbacker/internal/app"
+	"github.com/mingalevme/feedbacker/pkg/envvarbag"
 	"os"
 )
 
 func main() {
-	cfg := config.New(env.New())
-	container := di.New(cfg)
-	conn := container.GetDatabaseConnection()
+	envVarBag := envvarbag.New()
+	var env app.Env = app.NewEnv(envVarBag)
+	conn := env.DatabaseConnection()
 
 	if len(os.Args) < 2 {
 		panic(fmt.Errorf("usage: %s dir", os.Args[0]))
@@ -31,7 +30,7 @@ func main() {
 
 	migrator, err := migrate.NewWithDatabaseInstance(
 		fmt.Sprintf("file://%s", path),
-		cfg.GetDBName(),
+		env.DBName(),
 		driver,
 	)
 

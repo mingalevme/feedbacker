@@ -3,8 +3,8 @@ package notifier
 import (
 	"fmt"
 	"github.com/mingalevme/feedbacker/internal/app/model"
-	"github.com/mingalevme/feedbacker/internal/app/service/emailer"
-	"github.com/mingalevme/feedbacker/internal/app/service/log"
+	"github.com/mingalevme/feedbacker/pkg/emailer"
+	"github.com/mingalevme/feedbacker/pkg/log"
 	util2 "github.com/mingalevme/feedbacker/pkg/util"
 	"github.com/pkg/errors"
 	"strings"

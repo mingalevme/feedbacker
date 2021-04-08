@@ -1,23 +1,23 @@
-package di
+package app
 
 import (
-	"github.com/mingalevme/feedbacker/internal/app/service/log"
+	"github.com/mingalevme/feedbacker/pkg/log"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"os"
 	"strings"
 )
 
-func (s *container) GetLogger() log.Logger {
+func (s *Container) Logger() log.Logger {
 	if s.logger != nil {
 		return s.logger
 	}
-	channel := s.config.GetEnvVar("LOG_CHANNEL", "stdout")
+	channel := s.envVarBag.Get("LOG_CHANNEL", "stdout")
 	s.logger = s.newLogChannel(channel)
 	return s.logger
 }
 
-func (s *container) newLogChannel(channel string) log.Logger {
+func (s *Container) newLogChannel(channel string) log.Logger {
 	if channel == "null" {
 		return s.newNullLogger()
 	}
@@ -36,9 +36,9 @@ func (s *container) newLogChannel(channel string) log.Logger {
 	panic(errors.Errorf("unsupported log channel: %s", channel))
 }
 
-func (s *container) newStackLogger() log.Logger {
+func (s *Container) newStackLogger() log.Logger {
 	logger := log.NewStackLogger()
-	channels := strings.Split(s.config.GetEnvVar("LOG_STACK_CHANNELS", "stdout"), ",")
+	channels := strings.Split(s.envVarBag.Get("LOG_STACK_CHANNELS", "stdout"), ",")
 	for _, channel := range channels {
 		channel = strings.TrimSpace(channel)
 		if channel == "" {
@@ -52,14 +52,14 @@ func (s *container) newStackLogger() log.Logger {
 	return logger
 }
 
-func (s *container) newNullLogger() log.Logger {
+func (s *Container) newNullLogger() log.Logger {
 	return log.NewNullLogger()
 }
 
-func (s *container) newStdoutLogger() log.Logger {
+func (s *Container) newStdoutLogger() log.Logger {
 	logrusLogger := logrus.New()
 	logrusLogger.SetOutput(os.Stdout)
-	if level, err := logrus.ParseLevel(s.config.GetEnvVar("LOG_STDOUT_LEVEL", "debug")); err != nil {
+	if level, err := logrus.ParseLevel(s.envVarBag.Get("LOG_STDOUT_LEVEL", "debug")); err != nil {
 		panic(errors.Wrap(err, "parsing stdout logging level"))
 	} else {
 		logrusLogger.SetLevel(level)
@@ -67,18 +67,18 @@ func (s *container) newStdoutLogger() log.Logger {
 	return log.NewLogrusLogger(logrusLogger)
 }
 
-func (s *container) newSentryLogger() log.Logger {
-	level, err := log.ParseLevel(s.config.GetEnvVar("LOG_SENTRY_LEVEL", log.LevelWarning.String()))
+func (s *Container) newSentryLogger() log.Logger {
+	level, err := log.ParseLevel(s.envVarBag.Get("LOG_SENTRY_LEVEL", log.LevelWarning.String()))
 	if err != nil {
 		panic(errors.Wrap(err, "parsing sentry log level (LOG_SENTRY_LEVEL)"))
 	}
-	return log.NewSentryLogger(s.GetSentry(), level)
+	return log.NewSentryLogger(s.Sentry(), level)
 }
 
-func (s *container) newRollbarLogger() log.Logger {
-	level, err := log.ParseLevel(s.config.GetEnvVar("LOG_ROLLBAR_LEVEL", log.LevelWarning.String()))
+func (s *Container) newRollbarLogger() log.Logger {
+	level, err := log.ParseLevel(s.envVarBag.Get("LOG_ROLLBAR_LEVEL", log.LevelWarning.String()))
 	if err != nil {
 		panic(errors.Wrap(err, "parsing rollbar log level (LOG_ROLLBAR_LEVEL)"))
 	}
-	return log.NewRollbarLogger(s.GetRollbar(), level)
+	return log.NewRollbarLogger(s.Rollbar(), level)
 }

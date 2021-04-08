@@ -2,7 +2,7 @@ package http
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/mingalevme/feedbacker/internal/app/di"
+	"github.com/mingalevme/feedbacker/internal/app"
 	"github.com/mingalevme/feedbacker/internal/app/interactor"
 	"github.com/pkg/errors"
 	"net/http"
@@ -10,14 +10,14 @@ import (
 )
 
 type EchoHandlerBag struct {
-	container di.Container
-	services  *interactor.Interactor
+	env      app.Env
+	services *interactor.Interactor
 }
 
-func NewEchoHandlerBag(container di.Container) *EchoHandlerBag {
+func NewEchoHandlerBag(env app.Env) *EchoHandlerBag {
 	return &EchoHandlerBag{
-		container: container,
-		services:  interactor.New(container),
+		env:      env,
+		services: interactor.New(env),
 	}
 }
 
