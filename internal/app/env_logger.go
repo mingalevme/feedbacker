@@ -12,7 +12,7 @@ func (s *Container) Logger() log.Logger {
 	if s.logger != nil {
 		return s.logger
 	}
-	channel := s.envVarBag.Get("LOG_CHANNEL", "stdout")
+	channel := s.EnvVarBag.Get("LOG_CHANNEL", "stdout")
 	s.logger = s.newLogChannel(channel)
 	return s.logger
 }
@@ -38,7 +38,7 @@ func (s *Container) newLogChannel(channel string) log.Logger {
 
 func (s *Container) newStackLogger() log.Logger {
 	logger := log.NewStackLogger()
-	channels := strings.Split(s.envVarBag.Get("LOG_STACK_CHANNELS", "stdout"), ",")
+	channels := strings.Split(s.EnvVarBag.Get("LOG_STACK_CHANNELS", "stdout"), ",")
 	for _, channel := range channels {
 		channel = strings.TrimSpace(channel)
 		if channel == "" {
@@ -59,7 +59,7 @@ func (s *Container) newNullLogger() log.Logger {
 func (s *Container) newStdoutLogger() log.Logger {
 	logrusLogger := logrus.New()
 	logrusLogger.SetOutput(os.Stdout)
-	if level, err := logrus.ParseLevel(s.envVarBag.Get("LOG_STDOUT_LEVEL", "debug")); err != nil {
+	if level, err := logrus.ParseLevel(s.EnvVarBag.Get("LOG_STDOUT_LEVEL", "debug")); err != nil {
 		panic(errors.Wrap(err, "parsing stdout logging level"))
 	} else {
 		logrusLogger.SetLevel(level)
@@ -68,7 +68,7 @@ func (s *Container) newStdoutLogger() log.Logger {
 }
 
 func (s *Container) newSentryLogger() log.Logger {
-	level, err := log.ParseLevel(s.envVarBag.Get("LOG_SENTRY_LEVEL", log.LevelWarning.String()))
+	level, err := log.ParseLevel(s.EnvVarBag.Get("LOG_SENTRY_LEVEL", log.LevelWarning.String()))
 	if err != nil {
 		panic(errors.Wrap(err, "parsing sentry log level (LOG_SENTRY_LEVEL)"))
 	}
@@ -76,7 +76,7 @@ func (s *Container) newSentryLogger() log.Logger {
 }
 
 func (s *Container) newRollbarLogger() log.Logger {
-	level, err := log.ParseLevel(s.envVarBag.Get("LOG_ROLLBAR_LEVEL", log.LevelWarning.String()))
+	level, err := log.ParseLevel(s.EnvVarBag.Get("LOG_ROLLBAR_LEVEL", log.LevelWarning.String()))
 	if err != nil {
 		panic(errors.Wrap(err, "parsing rollbar log level (LOG_ROLLBAR_LEVEL)"))
 	}

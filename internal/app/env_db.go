@@ -8,30 +8,30 @@ import (
 )
 
 func (s *Container) DBHost() string {
-	return s.envVarBag.Get("DB_HOST", "127.0.0.1")
+	return s.EnvVarBag.Get("DB_HOST", "127.0.0.1")
 }
 
 func (s *Container) DBPort() uint16 {
-	val, err := strconv.ParseUint(s.envVarBag.Get("DB_PORT", "5432"), 10, 0)
+	val, err := strconv.ParseUint(s.EnvVarBag.Get("DB_PORT", "5432"), 10, 0)
 	if err != nil {
-		panic(errors.Wrap(err, "Error while parsing MAIL_SMTP_PORT envVarBag-var"))
+		panic(errors.Wrap(err, "Error while parsing MAIL_SMTP_PORT env-var"))
 	}
 	if val > 65535 {
-		panic(errors.Wrapf(err, "Value of MAIL_SMTP_PORT envVarBag-var is too big: %d", val))
+		panic(errors.Wrapf(err, "Value of MAIL_SMTP_PORT env-var is too big: %d", val))
 	}
 	return uint16(val)
 }
 
 func (s *Container) DBUser() string {
-	return s.envVarBag.Get("DB_USER", "postgres")
+	return s.EnvVarBag.Get("DB_USER", "postgres")
 }
 
 func (s *Container) DBPass() string {
-	return s.envVarBag.Get("DB_PASSWORD", "postgres")
+	return s.EnvVarBag.Get("DB_PASSWORD", "postgres")
 }
 
 func (s *Container) DBName() string {
-	return s.envVarBag.Get("DB_NAME", "postgres")
+	return s.EnvVarBag.Get("DB_NAME", "postgres")
 }
 
 func (s *Container) DatabaseConnection() *sql.DB {

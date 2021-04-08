@@ -5,7 +5,7 @@ import (
 	"github.com/mingalevme/feedbacker/internal/app/model"
 	"github.com/mingalevme/feedbacker/pkg/emailer"
 	"github.com/mingalevme/feedbacker/pkg/log"
-	util2 "github.com/mingalevme/feedbacker/pkg/util"
+	"github.com/mingalevme/feedbacker/pkg/util"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -27,7 +27,7 @@ func (s *EmailNotifier) Notify(f model.Feedback) error {
 	if f.Customer != nil && f.Customer.InstallationID != nil {
 		replacement["InstallationID"] = *f.Customer.InstallationID
 	}
-	subject := strings.TrimSpace(util2.Sprintf(s.subject, replacement))
+	subject := strings.TrimSpace(util.Sprintf(s.subject, replacement))
 	return s.sender.Send(s.from, s.to, subject, feedbackToMessage(f, &indent))
 }
 
@@ -35,13 +35,13 @@ func NewEmailNotifier(sender emailer.EmailSender, from string, to string, subjec
 	if sender == nil {
 		panic(errors.New("`sender` is nil"))
 	}
-	if util2.IsEmptyString(from) {
+	if util.IsEmptyString(from) {
 		panic(errors.New("`from` is empty"))
 	}
-	if util2.IsEmptyString(to) {
+	if util.IsEmptyString(to) {
 		panic(errors.New("`to` is empty"))
 	}
-	if util2.IsEmptyString(subject) {
+	if util.IsEmptyString(subject) {
 		panic(errors.New("`subject` is empty"))
 	}
 	if logger == nil {

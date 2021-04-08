@@ -60,7 +60,7 @@ func (s *SmtpEmailSender) Send(from string, to string, subject string, message s
 	//defer func() {
 	//	_ = c.Close()
 	//}()
-	//if err = c.Mail(from); err != nil {
+	//if err = c.Mailfrom); err != nil {
 	//	return wrapSmtpError(errors.Wrap(err, "setting `From`"))
 	//}
 	//if err = c.Rcpt(to); err != nil {

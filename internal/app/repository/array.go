@@ -7,14 +7,14 @@ import (
 )
 
 type ArrayFeedbackRepository struct {
-	storage []model.Feedback
-	logger  log.Logger
+	Storage []model.Feedback
+	Logger  log.Logger
 }
 
 func NewArrayFeedbackRepository(logger log.Logger) *ArrayFeedbackRepository {
 	return &ArrayFeedbackRepository{
-		storage: []model.Feedback{},
-		logger: logger,
+		Storage: []model.Feedback{},
+		Logger:  logger,
 	}
 }
 
@@ -26,17 +26,17 @@ func (s *ArrayFeedbackRepository) Add(data AddFeedbackData) (model.Feedback, err
 	f.ID = s.getNextID()
 	f.CreatedAt = time.Now()
 	f.UpdatedAt = time.Now()
-	s.storage = append(s.storage, f)
-	s.logger.Debugf("Created item: #%+v", f)
+	s.Storage = append(s.Storage, f)
+	s.Logger.Debugf("Created item: #%+v", f)
 	return f, nil
 }
 
 func (s *ArrayFeedbackRepository) getNextID() int {
-	return len(s.storage) + 1
+	return len(s.Storage) + 1
 }
 
 func (s *ArrayFeedbackRepository) GetById(id int) (model.Feedback, error) {
-	for _, f := range s.storage {
+	for _, f := range s.Storage {
 		if f.ID == id {
 			return f, nil
 		}

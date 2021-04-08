@@ -58,7 +58,7 @@ type Env interface {
 }
 
 type Container struct {
-	envVarBag  envvarbag.EnvVarBag
+	EnvVarBag  envvarbag.EnvVarBag
 	logger     log.Logger
 	repository repository.Feedback
 	notifier   notifier.Notifier
@@ -81,7 +81,7 @@ func (s *Container) RedisDB() uint {
 	v := s.getEnvVar("REDIS_DB", "0")
 	n, err := strconv.ParseUint(v, 10, 0)
 	if err != nil {
-		panic(errors.Wrap(err, "Error while parsing REDIS_DB envVarBag-var"))
+		panic(errors.Wrap(err, "Error while parsing REDIS_DB env-var"))
 	}
 	return uint(n)
 }
@@ -101,36 +101,36 @@ func (s *Container) Redis() *redis.Client {
 func NewEnv(e envvarbag.EnvVarBag) *Container {
 
 	return &Container{
-		envVarBag: e,
+		EnvVarBag: e,
 	}
 }
 
 func (s *Container) getEnvVar(key, fallback string) string {
-	return s.envVarBag.Get(key, fallback)
+	return s.EnvVarBag.Get(key, fallback)
 }
 
 func (s *Container) AppEnv() string {
-	return s.envVarBag.Get("APP_ENV", "production")
+	return s.EnvVarBag.Get("APP_ENV", "production")
 }
 
 func (s *Container) Debug() bool {
-	val, err := strconv.ParseBool(s.envVarBag.Get("DEBUG", "0"))
+	val, err := strconv.ParseBool(s.EnvVarBag.Get("DEBUG", "0"))
 	if err != nil {
-		panic(errors.Wrap(err, "Error while parsing DEBUG envVarBag-var"))
+		panic(errors.Wrap(err, "Error while parsing DEBUG env-var"))
 	}
 	return val
 }
 
 func (s *Container) MaxPostRequestBodyLength() uint {
-	val, err := strconv.ParseUint(s.envVarBag.Get("MAX_POST_REQUEST_BODY_LENGTH", ""), 10, 0)
+	val, err := strconv.ParseUint(s.EnvVarBag.Get("MAX_POST_REQUEST_BODY_LENGTH", ""), 10, 0)
 	if err != nil {
-		panic(errors.Wrap(err, "Error while parsing MAX_POST_REQUEST_BODY_LENGTH envVarBag-var"))
+		panic(errors.Wrap(err, "Error while parsing MAX_POST_REQUEST_BODY_LENGTH env-var"))
 	}
 	return uint(val)
 }
 
 func (s *Container) LogRequests() bool {
-	v, err := strconv.ParseBool(s.envVarBag.Get("HTTP_LOG_REQUESTS", "0"))
+	v, err := strconv.ParseBool(s.EnvVarBag.Get("HTTP_LOG_REQUESTS", "0"))
 	if err != nil {
 		panic(errors.Wrap(err, "env: parsing HTTP_LOG_REQUESTS to bool"))
 	}
@@ -141,7 +141,7 @@ func (s *Container) FeedbackRepository() repository.Feedback {
 	if s.repository != nil {
 		return s.repository
 	}
-	driver := s.envVarBag.Get("PERSISTENCE_DRIVER", "database")
+	driver := s.EnvVarBag.Get("PERSISTENCE_DRIVER", "database")
 	if driver == "database" {
 		conn := s.DatabaseConnection()
 		// https://github.com/go-pg/pg
@@ -157,22 +157,22 @@ func (s *Container) FeedbackRepository() repository.Feedback {
 }
 
 func (s *Container) MailSmtpHost() string {
-	return s.envVarBag.Get("MAIL_SMTP_HOST", "127.0.0.1")
+	return s.EnvVarBag.Get("MAIL_SMTP_HOST", "127.0.0.1")
 }
 
 func (s *Container) MailSmtpPort() uint16 {
-	val, err := strconv.ParseUint(s.envVarBag.Get("MAIL_SMTP_PORT", "25"), 10, 0)
+	val, err := strconv.ParseUint(s.EnvVarBag.Get("MAIL_SMTP_PORT", "25"), 10, 0)
 	if err != nil {
-		panic(errors.Wrap(err, "Error while parsing MAIL_SMTP_PORT envVarBag-var"))
+		panic(errors.Wrap(err, "Error while parsing MAIL_SMTP_PORT env-var"))
 	}
 	if val > 65535 {
-		panic(errors.Wrapf(err, "Value of MAIL_SMTP_PORT envVarBag-var is too big: %d", val))
+		panic(errors.Wrapf(err, "Value of MAIL_SMTP_PORT env-var is too big: %d", val))
 	}
 	return uint16(val)
 }
 
 func (s *Container) MailSmtpUsername() *string {
-	u := s.envVarBag.Get("MAIL_SMTP_USERNAME", "")
+	u := s.EnvVarBag.Get("MAIL_SMTP_USERNAME", "")
 	if util.IsEmptyString(u) {
 		return nil
 	}
@@ -180,7 +180,7 @@ func (s *Container) MailSmtpUsername() *string {
 }
 
 func (s *Container) MailSmtpPassword() *string {
-	p := s.envVarBag.Get("MAIL_SMTP_PASSWORD", "")
+	p := s.EnvVarBag.Get("MAIL_SMTP_PASSWORD", "")
 	if util.IsEmptyString(p) {
 		return nil
 	}
@@ -199,7 +199,7 @@ func (s *Container) NotifierEmailFrom() string {
 		}
 		return fmt.Sprintf("%s@%s", u.Username, h)
 	}
-	from := s.envVarBag.Get("NOTIFIER_EMAIL_FROM", "")
+	from := s.EnvVarBag.Get("NOTIFIER_EMAIL_FROM", "")
 	if util.IsEmptyString(from) {
 		return def()
 	}
@@ -207,7 +207,7 @@ func (s *Container) NotifierEmailFrom() string {
 }
 
 func (s *Container) NotifierEmailTo() string {
-	to := s.envVarBag.Get("NOTIFIER_EMAIL_TO", "")
+	to := s.EnvVarBag.Get("NOTIFIER_EMAIL_TO", "")
 	if util.IsEmptyString(to) {
 		panic(errors.New("NOTIFIER_EMAIL_TO is empty"))
 	}
@@ -218,11 +218,11 @@ func (s *Container) EmailSender() emailer.EmailSender {
 	if s.emailer != nil {
 		return s.emailer
 	}
-	driver := s.envVarBag.Get("EMAILER_DRIVER", "smtp")
+	driver := s.EnvVarBag.Get("EMAILER_DRIVER", "smtp")
 	if driver == "smtp" {
 		s.emailer = emailer.NewSmtpEmailSender(s.MailSmtpHost(), s.MailSmtpPort(), s.MailSmtpUsername(), s.MailSmtpPassword(), s.Logger())
 	} else if driver == "array" {
-		s.emailer = emailer.NewArrayEmailSender(s.Logger())
+		s.emailer = emailer.NewArrayEmailSender()
 	} else {
 		panic(errors.Errorf("Unsupported emailer driver: %s", driver))
 	}
@@ -230,14 +230,14 @@ func (s *Container) EmailSender() emailer.EmailSender {
 }
 
 func (s *Container) NotifierEmailSubjectTemplate() string {
-	return s.envVarBag.Get("NOTIFIER_EMAIL_SUBJECT_TEMPLATE", "Feedback %{InstallationID}s")
+	return s.EnvVarBag.Get("NOTIFIER_EMAIL_SUBJECT_TEMPLATE", "Feedback %{InstallationID}s")
 }
 
 func (s *Container) Notifier() notifier.Notifier {
 	if s.notifier != nil {
 		return s.notifier
 	}
-	driver := s.envVarBag.Get("NOTIFIER_DRIVER", "email")
+	driver := s.EnvVarBag.Get("NOTIFIER_DRIVER", "email")
 	if driver == "email" {
 		s.notifier = notifier.NewEmailNotifier(s.EmailSender(), s.NotifierEmailFrom(), s.NotifierEmailTo(), s.NotifierEmailSubjectTemplate(), s.Logger())
 	} else if driver == "array" {
@@ -254,7 +254,7 @@ func (s *Container) Sentry() *sentry.Hub {
 	if s.sentry != nil {
 		return s.sentry
 	}
-	dsn := s.envVarBag.Get("SENTRY_DSN", "")
+	dsn := s.EnvVarBag.Get("SENTRY_DSN", "")
 	if util.IsEmptyString(dsn) {
 		panic("SENTRY_DSN-envvar is empty")
 	}
@@ -281,7 +281,7 @@ func (s *Container) Rollbar() *rollbar.Client {
 	if s.rollbar != nil {
 		return s.rollbar
 	}
-	token := s.envVarBag.Get("ROLLBAR_TOKEN", "")
+	token := s.EnvVarBag.Get("ROLLBAR_TOKEN", "")
 	if util.IsEmptyString(token) {
 		panic("ROLLBAR_TOKEN-envvar is empty")
 	}

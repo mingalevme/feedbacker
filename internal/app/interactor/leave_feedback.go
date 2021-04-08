@@ -13,7 +13,7 @@ type LeaveFeedbackData struct {
 	AppBuildNumber *string `json:"bversion" xml:"bversion" param:"bversion" query:"bversion" form:"bversion"`
 	Edition        *string `json:"edition" xml:"edition" param:"edition" query:"edition" form:"edition"`
 	Body           string  `json:"body" xml:"body" param:"body" query:"body" form:"body"`
-	Manufacturer   *string `json:"brand" xml:"brand" param:"brand" query:"brand" form:"brand"`
+	Brand          *string `json:"brand" xml:"brand" param:"brand" query:"brand" form:"brand"`
 	Model          *string `json:"model,omitempty" xml:"model" param:"model" query:"model" form:"model"`
 	OsName         *string `json:"osname" xml:"osname" param:"osname" query:"osname" form:"osname"`
 	OsVersion      *string `json:"osversion" xml:"osversion" param:"osversion" query:"osversion" form:"osversion"`
@@ -40,8 +40,8 @@ func (s LeaveFeedbackData) Validate() error {
 	if util.IsEmptyString(s.Body) {
 		return errors.Wrap(ErrUnprocessableEntity, "text (body) is required")
 	}
-	if util.IsEmptyString(s.Manufacturer) {
-		s.Manufacturer = nil
+	if util.IsEmptyString(s.Brand) {
+		s.Brand = nil
 	}
 	if util.IsEmptyString(s.Model) {
 		s.Model = nil
@@ -74,9 +74,9 @@ func (s *Interactor) LeaveFeedback(input LeaveFeedbackData) (model.Feedback, err
 		return f, err
 	}
 	//go func() {
-		if err := s.env.Notifier().Notify(f); err != nil {
-			s.env.Logger().WithError(err).Error("Error while feedback left notifying")
-		}
+	if err := s.env.Notifier().Notify(f); err != nil {
+		s.env.Logger().WithError(err).Error("Error while feedback left notifying")
+	}
 	//}()
 	return f, nil
 }
@@ -91,7 +91,7 @@ func convertLeaveFeedbackDataToAddFeedbackData(input LeaveFeedbackData) reposito
 			AppBuild:    input.AppBuildNumber,
 			OsName:      input.OsName,
 			OsVersion:   input.OsVersion,
-			DeviceBrand: input.Manufacturer,
+			DeviceBrand: input.Brand,
 			DeviceModel: input.Model,
 		},
 		Customer: &model.Customer{
