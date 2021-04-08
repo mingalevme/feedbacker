@@ -50,11 +50,3 @@ func New() *Bag {
 		storage: storage,
 	}
 }
-
-func NewWithValues(values map[string]string) *Bag {
-	b := New()
-	for k, v := range values {
-		b.storage[k] = v
-	}
-	return b
-}
