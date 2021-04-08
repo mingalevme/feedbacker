@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type FeedbackLeftNotifier interface {
+type Notifier interface {
 	Notify(feedback model.Feedback) error
 }
 

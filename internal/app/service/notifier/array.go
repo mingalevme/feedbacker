@@ -6,22 +6,22 @@ import (
 	"github.com/mingalevme/feedbacker/pkg/log"
 )
 
-type ArrayFeedbackLeftNotifier struct {
+type ArrayNotifier struct {
 	storage []model.Feedback
 	logger  log.Logger
 }
 
 // Sync
-func (s *ArrayFeedbackLeftNotifier) Notify(f model.Feedback) error {
+func (s *ArrayNotifier) Notify(f model.Feedback) error {
 	s.logger.WithField("_notifier", fmt.Sprintf("%T", s)).Infof("Notifying:\n%s", feedbackToMessage(f, &indent))
 	return nil
 }
 
-func NewArrayFeedbackLeftNotifier(logger log.Logger) *ArrayFeedbackLeftNotifier {
+func NewArrayNotifier(logger log.Logger) *ArrayNotifier {
 	if logger == nil {
 		panic("logger is nil")
 	}
-	return &ArrayFeedbackLeftNotifier{
+	return &ArrayNotifier{
 		storage: []model.Feedback{},
 		logger: logger,
 	}

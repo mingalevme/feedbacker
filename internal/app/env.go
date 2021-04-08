@@ -1,9 +1,11 @@
 package app
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"github.com/getsentry/sentry-go"
+	"github.com/go-redis/redis/v8"
 	"github.com/mingalevme/feedbacker/internal/app/repository"
 	"github.com/mingalevme/feedbacker/internal/app/service/notifier"
 	"github.com/mingalevme/feedbacker/pkg/emailer"
@@ -31,7 +33,7 @@ type Env interface {
 	NotifierEmailFrom() string
 	NotifierEmailTo() string
 	NotifierEmailSubjectTemplate() string
-	Notifier() notifier.FeedbackLeftNotifier
+	Notifier() notifier.Notifier
 	//
 	MailSmtpHost() string
 	MailSmtpPort() uint16
@@ -48,20 +50,56 @@ type Env interface {
 	//
 	Sentry() *sentry.Hub
 	Rollbar() *rollbar.Client
+	//
+	RedisAddr() string
+	RedisPass() string
+	RedisDB() uint
+	Redis() *redis.Client
 }
 
 type Container struct {
 	envVarBag  envvarbag.EnvVarBag
 	logger     log.Logger
 	repository repository.Feedback
-	notifier   notifier.FeedbackLeftNotifier
+	notifier   notifier.Notifier
 	emailer    emailer.EmailSender
 	db         *sql.DB
 	sentry     *sentry.Hub
 	rollbar    *rollbar.Client
+	redis      *redis.Client
+}
+
+func (s *Container) RedisAddr() string {
+	return s.getEnvVar("REDIS_ADDR", "127.0.0.1:6379")
+}
+
+func (s *Container) RedisPass() string {
+	return s.getEnvVar("REDIS_PASS", "")
+}
+
+func (s *Container) RedisDB() uint {
+	v := s.getEnvVar("REDIS_DB", "0")
+	n, err := strconv.ParseUint(v, 10, 0)
+	if err != nil {
+		panic(errors.Wrap(err, "Error while parsing REDIS_DB envVarBag-var"))
+	}
+	return uint(n)
+}
+
+func (s *Container) Redis() *redis.Client {
+	if s.redis != nil {
+		return s.redis
+	}
+	s.redis = redis.NewClient(&redis.Options{
+		Addr:               s.RedisAddr(),
+		Password:           s.RedisPass(),
+		DB:                 int(s.RedisDB()),
+	})
+	return s.redis
 }
 
 func NewEnv(e envvarbag.EnvVarBag) *Container {
+
 	return &Container{
 		envVarBag: e,
 	}
@@ -108,6 +146,8 @@ func (s *Container) FeedbackRepository() repository.Feedback {
 		conn := s.DatabaseConnection()
 		// https://github.com/go-pg/pg
 		s.repository = repository.NewDatabaseFeedbackRepository(conn, s.Logger())
+	} else if driver == "redis" {
+		s.repository = repository.NewRedisFeedbackRepository(s.Redis(), context.Background())
 	} else if driver == "array" {
 		s.repository = repository.NewArrayFeedbackRepository(s.Logger())
 	} else {
@@ -193,15 +233,17 @@ func (s *Container) NotifierEmailSubjectTemplate() string {
 	return s.envVarBag.Get("NOTIFIER_EMAIL_SUBJECT_TEMPLATE", "Feedback %{InstallationID}s")
 }
 
-func (s *Container) Notifier() notifier.FeedbackLeftNotifier {
+func (s *Container) Notifier() notifier.Notifier {
 	if s.notifier != nil {
 		return s.notifier
 	}
 	driver := s.envVarBag.Get("NOTIFIER_DRIVER", "email")
 	if driver == "email" {
-		s.notifier = notifier.NewEmailFeedbackLeftNotifier(s.EmailSender(), s.NotifierEmailFrom(), s.NotifierEmailTo(), s.NotifierEmailSubjectTemplate(), s.Logger())
+		s.notifier = notifier.NewEmailNotifier(s.EmailSender(), s.NotifierEmailFrom(), s.NotifierEmailTo(), s.NotifierEmailSubjectTemplate(), s.Logger())
 	} else if driver == "array" {
-		s.notifier = notifier.NewArrayFeedbackLeftNotifier(s.Logger())
+		s.notifier = notifier.NewArrayNotifier(s.Logger())
+	} else if driver == "null" {
+		s.notifier = notifier.NewNullNotifier()
 	} else {
 		panic(errors.Errorf("Unsupported notifier driver: %s", driver))
 	}
@@ -217,8 +259,8 @@ func (s *Container) Sentry() *sentry.Hub {
 		panic("SENTRY_DSN-envvar is empty")
 	}
 	s.sentry = s.newSentryHub(sentry.ClientOptions{
-		Dsn: dsn,
-		Debug: s.Debug(),
+		Dsn:         dsn,
+		Debug:       s.Debug(),
 		Environment: s.AppEnv(),
 	})
 	s.sentry.ConfigureScope(func(scope *sentry.Scope) {

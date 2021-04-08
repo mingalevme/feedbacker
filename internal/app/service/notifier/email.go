@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-type EmailFeedbackLeftNotifier struct {
+type EmailNotifier struct {
 	sender  emailer.EmailSender
 	from    string
 	to      string
@@ -19,7 +19,7 @@ type EmailFeedbackLeftNotifier struct {
 }
 
 // Sync
-func (s *EmailFeedbackLeftNotifier) Notify(f model.Feedback) error {
+func (s *EmailNotifier) Notify(f model.Feedback) error {
 	s.logger.WithField("_notifier", fmt.Sprintf("%T", s)).Infof("Notifying:\n%s", feedbackToMessage(f, nil))
 	replacement := map[string]interface{}{
 		"InstallationID": "",
@@ -31,7 +31,7 @@ func (s *EmailFeedbackLeftNotifier) Notify(f model.Feedback) error {
 	return s.sender.Send(s.from, s.to, subject, feedbackToMessage(f, &indent))
 }
 
-func NewEmailFeedbackLeftNotifier(sender emailer.EmailSender, from string, to string, subject string, logger log.Logger) *EmailFeedbackLeftNotifier {
+func NewEmailNotifier(sender emailer.EmailSender, from string, to string, subject string, logger log.Logger) *EmailNotifier {
 	if sender == nil {
 		panic(errors.New("`sender` is nil"))
 	}
@@ -47,7 +47,7 @@ func NewEmailFeedbackLeftNotifier(sender emailer.EmailSender, from string, to st
 	if logger == nil {
 		panic(errors.New("`logger` is nil"))
 	}
-	notifier := &EmailFeedbackLeftNotifier{
+	notifier := &EmailNotifier{
 		sender:  sender,
 		subject: subject,
 		from:    from,
