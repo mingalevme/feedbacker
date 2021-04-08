@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/mingalevme/feedbacker/_ddd/infrastructure/env"
-	util2 "github.com/mingalevme/feedbacker/pkg/util"
+	"github.com/mingalevme/feedbacker/pkg/util"
 	"github.com/pkg/errors"
 	"os"
 	"os/user"
@@ -13,6 +13,7 @@ import (
 type Config interface {
 	//GetEnvBag() env.EnvVarBag
 	GetEnvVar(key string, fallback string) string
+	GetAppEnv() string
 	IsDebug() bool
 	GetMaxPostRequestBodyLength() uint
 	GetMailSmtpHost() string
@@ -45,6 +46,10 @@ func New(e env.EnvVarBag) Config {
 
 func (s *config) GetEnvVar(key string, fallback string) string {
 	return s.envVarBag.Get(key, fallback)
+}
+
+func (s *config) GetAppEnv() string {
+	return s.envVarBag.Get("APP_ENV", "production")
 }
 
 func (s *config) IsDebug() bool {
@@ -80,7 +85,7 @@ func (s *config) GetMailSmtpPort() uint16 {
 
 func (s *config) GetMailSmtpUsername() *string {
 	u := s.envVarBag.Get("MAIL_SMTP_USERNAME", "")
-	if util2.IsEmptyString(u) {
+	if util.IsEmptyString(u) {
 		return nil
 	}
 	return &u
@@ -88,7 +93,7 @@ func (s *config) GetMailSmtpUsername() *string {
 
 func (s *config) GetMailSmtpPassword() *string {
 	p := s.envVarBag.Get("MAIL_SMTP_PASSWORD", "")
-	if util2.IsEmptyString(p) {
+	if util.IsEmptyString(p) {
 		return nil
 	}
 	return &p
@@ -107,7 +112,7 @@ func (s *config) GetNotifierEmailFrom() string {
 		return fmt.Sprintf("%s@%s", u.Username, h)
 	}
 	from := s.envVarBag.Get("NOTIFIER_EMAIL_FROM", "")
-	if util2.IsEmptyString(from) {
+	if util.IsEmptyString(from) {
 		return def()
 	}
 	return from
@@ -115,8 +120,8 @@ func (s *config) GetNotifierEmailFrom() string {
 
 func (s *config) GetNotifierEmailTo() string {
 	to := s.envVarBag.Get("NOTIFIER_EMAIL_TO", "")
-	if util2.IsEmptyString(to) {
-		panic("NOTIFIER_EMAIL_TO is empty")
+	if util.IsEmptyString(to) {
+		panic(errors.New("NOTIFIER_EMAIL_TO is empty"))
 	}
 	return to
 }

@@ -4,6 +4,17 @@ import "net/http"
 
 type Fields map[string]interface{}
 
+func (f Fields) Clone() Fields {
+	if f == nil {
+		return nil
+	}
+	clone := Fields{}
+	for key, value := range f {
+		clone[key] = value
+	}
+	return clone
+}
+
 type Logger interface {
 	WithField(key string, value interface{}) Logger
 	WithFields(fields Fields) Logger

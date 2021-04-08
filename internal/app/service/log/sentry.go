@@ -3,11 +3,9 @@ package log
 import (
 	"fmt"
 	"github.com/getsentry/sentry-go"
+	"github.com/pkg/errors"
 	"net/http"
-	"reflect"
 )
-
-const sentryMaxErrorDepth = 10
 
 type SentryLogger struct {
 	*AbstractLogger
@@ -62,60 +60,28 @@ func (s *SentryLogger) WithRequest(req *http.Request) Logger {
 }
 
 func (s *SentryLogger) Log(level Level, args ...interface{}) {
-	if !level.isGTE(s.level) {
+	if level.isLower(s.level) {
 		return
 	}
+	message := fmt.Sprint(args...)
 	clone := s.Clone()
 	clone.hub.ConfigureScope(func(scope *sentry.Scope) {
 		scope.SetLevel(sentry.Level(level))
 		if clone.err != nil {
-			scope.SetExtra("error", clone.err.Error())
-			//scope.AddEventProcessor(func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-			//	event.Exception = s.errorToExceptions(clone.err)
-			//	return event
-			//})
+			scope.AddEventProcessor(func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+				err := clone.err
+				err = errors.Wrap(err, message)
+				event.Message = err.Error()
+				event.Level = sentry.Level(level)
+				//event.Fingerprint = append(event.Fingerprint, "{{ default }}", "{{ message }}", "{{ error.type }}", "{{ error.value }}")
+				//event.Fingerprint = []string{"{{ default }}", "{{ message }}", "{{ error.type }}", "{{ error.value }}"}
+				return event
+			})
 		}
 	})
-	clone.hub.CaptureMessage(fmt.Sprint(args...))
+	if clone.err != nil {
+		clone.hub.CaptureException(clone.err)
+	} else {
+		clone.hub.CaptureMessage(message)
+	}
 }
-
-func (s *SentryLogger) errorToExceptions(err error) []sentry.Exception {
-	exceptions := []sentry.Exception{}
-
-	if err == nil {
-		return exceptions
-	}
-
-	for i := 0; i < sentryMaxErrorDepth && err != nil; i++ {
-		exceptions = append(exceptions, sentry.Exception{
-			Value:      err.Error(),
-			Type:       reflect.TypeOf(err).String(),
-			Stacktrace: sentry.ExtractStacktrace(err),
-		})
-		switch previous := err.(type) {
-		case interface{ Unwrap() error }:
-			err = previous.Unwrap()
-		case interface{ Cause() error }:
-			err = previous.Cause()
-		default:
-			err = nil
-		}
-	}
-
-	// Add a trace of the current stack to the most recent error in a chain if
-	// it doesn't have a stack trace yet.
-	// We only add to the most recent error to avoid duplication and because the
-	// current stack is most likely unrelated to errors deeper in the chain.
-	if exceptions[0].Stacktrace == nil {
-		exceptions[0].Stacktrace = sentry.NewStacktrace()
-	}
-
-	// event.Exception should be sorted such that the most recent error is last.
-	for i := len(exceptions)/2 - 1; i >= 0; i-- {
-		opp := len(exceptions) - 1 - i
-		exceptions[i], exceptions[opp] = exceptions[opp], exceptions[i]
-	}
-
-	return exceptions
-}
-

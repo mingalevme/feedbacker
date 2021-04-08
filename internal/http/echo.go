@@ -19,14 +19,9 @@ type EchoHTTPServer struct {
 
 func NewEchoServer(address string, container di.Container) *EchoHTTPServer {
 	e := echo.New()
-	//appEchoCtx := &EchoContext{
-	//	Context:   nil,
-	//	Container: container,
-	//}
-	//e.Use(echoContextMiddleware(appEchoCtx))
 	e.HTTPErrorHandler = func(err error, c echo.Context) {
 		if _, ok := err.(*echo.HTTPError); !ok {
-			container.GetLogger().WithError(err).Error("Error while handling request")
+			container.GetLogger().WithRequest(c.Request()).WithError(err).Fatal("Echo: handling request")
 		}
 		e.DefaultHTTPErrorHandler(err, c)
 	}
@@ -42,7 +37,6 @@ func NewEchoServer(address string, container di.Container) *EchoHTTPServer {
 	e.GET("/ping", h.Ping)
 	e.POST("/feedback", h.LeaveFeedback)
 	e.GET("/feedback/:id", h.ViewFeedback)
-	//e.HTTPErrorHandler = HTTPErrorHandler
 	return &EchoHTTPServer{
 		echo:    e,
 		address: address,
@@ -60,12 +54,3 @@ func (s *EchoHTTPServer) ListenAndServe() error {
 func (s *EchoHTTPServer) WaitForShutdown() {
 	waitForShutdown(s.echo.Shutdown)
 }
-
-//func echoContextMiddleware(appEchoCtx *EchoContext) echo.MiddlewareFunc {
-//	return func(h echo.HandlerFunc) echo.HandlerFunc {
-//		return func(c echo.Context) error {
-//			appEchoCtx.Context = c
-//			return h(appEchoCtx)
-//		}
-//	}
-//}

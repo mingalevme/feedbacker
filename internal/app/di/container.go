@@ -10,10 +10,8 @@ import (
 	"github.com/mingalevme/feedbacker/internal/config"
 	"github.com/mingalevme/feedbacker/pkg/util"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-	"os"
+	"github.com/rollbar/rollbar-go"
 	"strconv"
-	"strings"
 )
 
 type Container interface {
@@ -33,7 +31,8 @@ type container struct {
 	notifier   notifier.FeedbackLeftNotifier
 	emailer    emailer.EmailSender
 	db         *sql.DB
-	sentryHub  *sentry.Hub
+	sentry     *sentry.Hub
+	rollbar    *rollbar.Client
 	//leaveFeedbackService service.LeaveFeedbackService
 	//viewFeedbackService  service.ViewFeedbackService
 }
@@ -45,78 +44,47 @@ func New(config config.Config) Container {
 	return instance
 }
 
-func (s *container) GetLogger() log.Logger {
-	if s.logger != nil {
-		return s.logger
+func (s *container) GetSentry() *sentry.Hub {
+	if s.sentry != nil {
+		return s.sentry
 	}
-	channel := s.config.GetEnvVar("LOG_CHANNEL", "stdout")
-	s.logger = s.newLogChannel(channel)
-	return s.logger
-}
-
-func (s *container) newLogChannel(channel string) log.Logger {
-	if channel == "null" {
-		return s.newNullLogger()
-	}
-	if channel == "stdout" {
-		return s.newStdoutLogger()
-	}
-	if channel == "sentry" {
-		return s.newSentryLogger()
-	}
-	if channel == "stack" {
-		return s.newStackLogger()
-	}
-	panic(errors.Errorf("unsupported log channel: %s", channel))
-}
-
-func (s *container) newStackLogger() log.Logger {
-	logger := log.NewStackLogger()
-	channels := strings.Split(s.config.GetEnvVar("LOG_STACK_CHANNELS", "stdout"), ",")
-	for _, channel := range channels {
-		channel = strings.TrimSpace(channel)
-		if channel == "" {
-			continue
-		}
-		if channel == "stack" {
-			panic(errors.Errorf("stack channel recursion"))
-		}
-		logger.Add(s.newLogChannel(channel))
-	}
-	return logger
-}
-
-func (s *container) newNullLogger() log.Logger {
-	return log.NewNullLogger()
-}
-
-func (s *container) newStdoutLogger() log.Logger {
-	logrusLogger := logrus.New()
-	logrusLogger.SetOutput(os.Stdout)
-	if level, err := logrus.ParseLevel(s.config.GetEnvVar("LOG_STDOUT_LEVEL", "debug")); err != nil {
-		panic(errors.Wrap(err, "parsing stdout logging level"))
-	} else {
-		logrusLogger.SetLevel(level)
-	}
-	return log.NewLogrusLogger(logrusLogger)
-}
-
-func (s *container) newSentryLogger() log.Logger {
 	dsn := s.config.GetEnvVar("SENTRY_DSN", "")
 	if util.IsEmptyString(dsn) {
 		panic("SENTRY_DSN-envvar is empty")
 	}
-	level, err := log.ParseLevel(s.config.GetEnvVar("LOG_SENTRY_LEVEL", "warning"))
-	if err != nil {
-		panic(errors.Wrap(err, "parsing sentry log level"))
-	}
-	hub := s.newSentryHub(sentry.ClientOptions{
+	s.sentry = s.newSentryHub(sentry.ClientOptions{
 		Dsn: dsn,
+		Debug: s.config.IsDebug(),
+		Environment: s.config.GetAppEnv(),
 	})
-	return log.NewSentryLogger(hub, level)
+	s.sentry.ConfigureScope(func(scope *sentry.Scope) {
+		scope.SetFingerprint([]string{"{{ default }}", "{{ message }}", "{{ error.type }}", "{{ error.value }}"})
+	})
+	return s.sentry
 }
 
 func (s *container) newSentryHub(opts sentry.ClientOptions) *sentry.Hub {
+	client, err := sentry.NewClient(opts)
+	if err != nil {
+		panic(err)
+	}
+	return sentry.NewHub(client, sentry.NewScope())
+}
+
+func (s *container) GetRollbar() *rollbar.Client {
+	if s.rollbar != nil {
+		return s.rollbar
+	}
+	token := s.config.GetEnvVar("ROLLBAR_TOKEN", "")
+	if util.IsEmptyString(token) {
+		panic("ROLLBAR_TOKEN-envvar is empty")
+	}
+	s.rollbar = rollbar.New(token, s.config.GetAppEnv(), "", "", "")
+	s.rollbar.SetFingerprint(true)
+	return s.rollbar
+}
+
+func (s *container) newRollbarClient(opts sentry.ClientOptions) *sentry.Hub {
 	client, err := sentry.NewClient(opts)
 	if err != nil {
 		panic(err)

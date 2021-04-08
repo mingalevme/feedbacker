@@ -94,12 +94,11 @@ func (s *Interactor) LeaveFeedback(input LeaveFeedbackData) (model.Feedback, err
 	if err != nil {
 		return f, err
 	}
-	go func() {
-		err := s.container.GetFeedbackLeftNotifier().Notify(f)
-		if err != nil {
+	//go func() {
+		if err := s.container.GetFeedbackLeftNotifier().Notify(f); err != nil {
 			s.container.GetLogger().WithError(err).Error("Error while feedback left notifying")
 		}
-	}()
+	//}()
 	return f, nil
 }
 

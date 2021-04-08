@@ -49,13 +49,13 @@ func (l Level) isGTE(t Level) bool {
 	if ok == false {
 		panic(errors.Errorf("invalid source level: %s", l))
 	}
-	v2, ok := levelMap[l]
+	v2, ok := levelMap[t]
 	if ok == false {
 		panic(errors.Errorf("invalid targer level: %s", t))
 	}
 	return v1 >= v2
 }
 
-
-
-
+func (l Level) isLower(t Level) bool {
+	return !l.isGTE(t)
+}
