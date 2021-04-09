@@ -18,6 +18,14 @@ type EmailNotifier struct {
 	logger  log.Logger
 }
 
+func (s *EmailNotifier) Name() string {
+	return "emailer"
+}
+
+func (s *EmailNotifier) Health() error {
+	return s.sender.Health()
+}
+
 // Sync
 func (s *EmailNotifier) Notify(f model.Feedback) error {
 	s.logger.WithField("_notifier", fmt.Sprintf("%T", s)).Infof("Notifying:\n%s", feedbackToMessage(f, nil))
@@ -44,15 +52,15 @@ func NewEmailNotifier(sender emailer.EmailSender, from string, to string, subjec
 	if util.IsEmptyString(subject) {
 		panic(errors.New("`subject` is empty"))
 	}
-	if logger == nil {
-		panic(errors.New("`logger` is nil"))
-	}
 	notifier := &EmailNotifier{
 		sender:  sender,
 		subject: subject,
 		from:    from,
 		to:      to,
-		logger:  logger,
+		logger:  log.NewNullLogger(),
+	}
+	if logger != nil {
+		notifier.logger = logger
 	}
 	return notifier
 }

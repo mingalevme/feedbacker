@@ -11,6 +11,14 @@ type ArrayNotifier struct {
 	Logger  log.Logger
 }
 
+func (s *ArrayNotifier) Name() string {
+	return "array"
+}
+
+func (s *ArrayNotifier) Health() error {
+	return nil
+}
+
 // Sync
 func (s *ArrayNotifier) Notify(f model.Feedback) error {
 	s.Storage = append(s.Storage, f)

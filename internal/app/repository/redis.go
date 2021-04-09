@@ -6,20 +6,26 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"github.com/mingalevme/feedbacker/internal/app/model"
+	"github.com/mingalevme/feedbacker/pkg/timeutils"
 	"github.com/pkg/errors"
-	"time"
 )
 
 type RedisFeedbackRepository struct {
 	redis *redis.Client
+	key string
 	context context.Context
 }
 
 func NewRedisFeedbackRepository(redis *redis.Client, context context.Context) *RedisFeedbackRepository {
 	return &RedisFeedbackRepository{
 		redis: redis,
+		key: "feedback",
 		context: context,
 	}
+}
+
+func (s *RedisFeedbackRepository) Name() string {
+	return "redis"
 }
 
 func (s *RedisFeedbackRepository) Add(data AddFeedbackData) (model.Feedback, error)  {
@@ -28,13 +34,13 @@ func (s *RedisFeedbackRepository) Add(data AddFeedbackData) (model.Feedback, err
 	}
 	f := data.Feedback
 	f.ID = s.getNextID()
-	f.CreatedAt = time.Now()
-	f.UpdatedAt = time.Now()
+	f.CreatedAt = timeutils.Now()
+	f.UpdatedAt = timeutils.Now()
 	j, err := json.Marshal(f)
 	if err != nil {
 		return model.Feedback{}, errors.Wrap(err, "redis feedback repository: json-marshalling feedback")
 	}
-	_, err = s.redis.ZAdd(s.context, "feedbacks", &redis.Z{
+	_, err = s.redis.ZAdd(s.context, s.key, &redis.Z{
 		Score:  float64(f.ID),
 		Member: j,
 	}).Result()
@@ -45,18 +51,18 @@ func (s *RedisFeedbackRepository) Add(data AddFeedbackData) (model.Feedback, err
 }
 
 func (s *RedisFeedbackRepository) getNextID() int {
-	id, err := s.redis.Incr(s.context, "feedback_seq").Result()
+	id, err := s.redis.Incr(s.context, fmt.Sprintf("%s_seq", s.key)).Result()
 	if err != nil {
 		panic(errors.Wrap(err, "redis feedback repository: get next id: incrementing feedback_seq"))
 	}
 	if id < 1 {
 		id = 1
 	}
-	return int(id + 1)
+	return int(id)
 }
 
 func (s *RedisFeedbackRepository) GetById(id int) (model.Feedback, error) {
-	z, err := s.redis.ZRangeByScore(s.context, "feedbacks", &redis.ZRangeBy{
+	z, err := s.redis.ZRangeByScore(s.context, s.key, &redis.ZRangeBy{
 		Min:    fmt.Sprintf("%d", id),
 		Max:    fmt.Sprintf("%d", id),
 	}).Result()
@@ -71,4 +77,8 @@ func (s *RedisFeedbackRepository) GetById(id int) (model.Feedback, error) {
 		return model.Feedback{}, errors.Wrap(err, "redis feedback repository: json-unmarshalling feedback")
 	}
 	return *f, nil
+}
+
+func (s *RedisFeedbackRepository) Health() error {
+	return s.redis.Ping(s.context).Err()
 }

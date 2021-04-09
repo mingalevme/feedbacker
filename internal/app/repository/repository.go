@@ -23,8 +23,10 @@ func (s AddFeedbackData) Validate() error {
 }
 
 type Feedback interface {
+	Name() string
 	Add(data AddFeedbackData) (model.Feedback, error)
 	GetById(id int) (model.Feedback, error)
+	Health() error
 }
 
 

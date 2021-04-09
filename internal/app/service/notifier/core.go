@@ -9,6 +9,8 @@ import (
 )
 
 type Notifier interface {
+	Name() string
+	Health() error
 	Notify(feedback model.Feedback) error
 }
 

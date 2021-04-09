@@ -1,6 +1,39 @@
 # Feedbacker
 Example of a simple HTTP API application written in Go (router, database + migrations, json request/response)
 
+## Stack
+
+- [Project structure](https://github.com/golang-standards/project-layout)
+- Separating http logic from app
+- Environment based Config + Dependency Injection: ./internal/app/env.go
+- HTTP Middleware [Echo](https://echo.labstack.com/):
+  - HTTP Server
+  - Routing
+  - Data binding
+- [Database migrations](https://github.com/golang-migrate/migrate)
+- (Multichannel) Contextable (data / error / request) logger / interface
+  - Null
+  - Stdout (Logrus based)
+  - [Logrus](https://github.com/sirupsen/logrus)
+  - [Rollbar](https://rollbar.com/)
+  - [Sentry](https://sentry.io/)
+  - Stack (multichannel)
+  - Abstract Logger to implement custom logger
+  - StdLog Adapter (TODO)
+- Multi driver data repository
+  - Null driver
+  - Array driver
+  - Database driver
+  - Redis driver
+- Email sending
+  - Null
+  - Array
+  - SMTP
+- Testing
+  - Testing only build (go-) tags: [testing.go](https://github.com/mingalevme/feedbacker/blob/master/internal/app/model/testing.go)
+  - [Mocking database](https://github.com/mingalevme/feedbacker/blob/master/internal/app/repository/database_test.go) via [DATA-DOG/go-sqlmock](https://github.com/DATA-DOG/go-sqlmock)
+  - [Mocking redis](https://github.com/mingalevme/feedbacker/blob/master/internal/app/repository/redis_test.go) via [elliotchance/redismock](https://github.com/elliotchance/redismock)
+
 # Examples of running PostgreSQL via Docker
 ```
 docker run -d --restart=always -e POSTGRES_PASSWORD=postgres --name feedbacker-postgres postgres

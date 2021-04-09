@@ -7,6 +7,14 @@ import (
 type NullNotifier struct {
 }
 
+func (s *NullNotifier) Name() string {
+	return "null"
+}
+
+func (s *NullNotifier) Health() error {
+	return nil
+}
+
 func (s *NullNotifier) Notify(f model.Feedback) error {
 	return nil
 }

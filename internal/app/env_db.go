@@ -7,6 +7,10 @@ import (
 	"strconv"
 )
 
+func (s *Container) DBDriver() string {
+	return s.EnvVarBag.Get("DB_DRIVER", "postgres")
+}
+
 func (s *Container) DBHost() string {
 	return s.EnvVarBag.Get("DB_HOST", "127.0.0.1")
 }
@@ -39,14 +43,15 @@ func (s *Container) DatabaseConnection() *sql.DB {
 		return s.db
 	}
 	params := map[string]interface{}{
+		"Driver":   s.DBDriver(),
 		"Host":     s.DBHost(),
 		"Port":     strconv.Itoa(int(s.DBPort())),
 		"User":     s.DBUser(),
 		"Pass":     s.DBPass(),
 		"Database": s.DBName(),
 	}
-	dataSourceName := util.Sprintf("postgres://%{User}s:%{Pass}s@%{Host}s:%{Port}s/%{Database}s?sslmode=disable", params)
-	connection, err := sql.Open("postgres", dataSourceName)
+	dataSourceName := util.Sprintf("%{Driver}s://%{User}s:%{Pass}s@%{Host}s:%{Port}s/%{Database}s?sslmode=disable", params)
+	connection, err := sql.Open(s.DBDriver(), dataSourceName)
 	if err != nil {
 		panic(errors.New("Error while initializing connection to database"))
 	}

@@ -5,8 +5,10 @@ import (
 	"github.com/mingalevme/feedbacker/pkg/log"
 	util2 "github.com/mingalevme/feedbacker/pkg/util"
 	"github.com/pkg/errors"
+	"net"
 	"net/smtp"
 	"strings"
+	"time"
 )
 
 type SmtpEmailSender struct {
@@ -18,17 +20,32 @@ type SmtpEmailSender struct {
 }
 
 func NewSmtpEmailSender(host string, port uint16, username *string, password *string, logger log.Logger) *SmtpEmailSender {
-	if logger == nil {
-		panic(errors.New("logger is empty"))
-	}
 	sender := &SmtpEmailSender{
 		host:     host,
 		port:     port,
 		username: username,
 		password: password,
-		logger:   logger,
+		logger:   log.NewNullLogger(),
+	}
+	if logger == nil {
+		sender.logger = logger
 	}
 	return sender
+}
+
+func (s *SmtpEmailSender) Name() string {
+	return "smtp"
+}
+
+func (s *SmtpEmailSender) Health() error {
+	timeout := time.Second
+	conn, err := net.DialTimeout("tcp", s.GetAddr(), timeout)
+	defer func() {
+		if conn != nil {
+			_ = conn.Close()
+		}
+	}()
+	return err
 }
 
 func (s *SmtpEmailSender) Send(from string, to string, subject string, message string) error {
@@ -98,7 +115,8 @@ func (s *SmtpEmailSender) getAuth() smtp.Auth {
 }
 
 func (s *SmtpEmailSender) GetAddr() string {
-	return fmt.Sprintf("%s:%d", s.host, s.port)
+	return net.JoinHostPort(s.host, fmt.Sprintf("%d", s.port))
+	//return fmt.Sprintf("%s:%d", s.host, s.port)
 }
 
 func wrapSmtpError(err error) error {

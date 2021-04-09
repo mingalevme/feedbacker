@@ -15,11 +15,19 @@ type DatabaseFeedbackRepository struct {
 	logger log.Logger
 }
 
-func NewDatabaseFeedbackRepository(conn *sql.DB, logger log.Logger) Feedback {
-	return &DatabaseFeedbackRepository{
+func NewDatabaseFeedbackRepository(conn *sql.DB, logger log.Logger) *DatabaseFeedbackRepository {
+	r := &DatabaseFeedbackRepository{
 		conn,
-		logger,
+		log.NewNullLogger(),
 	}
+	if logger != nil {
+		r.logger = logger
+	}
+	return r
+}
+
+func (s *DatabaseFeedbackRepository) Name() string {
+	return "database (PostgreSQL)"
 }
 
 type extraColumnHolder struct {
@@ -111,4 +119,8 @@ func (s *DatabaseFeedbackRepository) GetById(id int) (model.Feedback, error) {
 		f.Context = extra.Context
 	}
 	return f, nil
+}
+
+func (s *DatabaseFeedbackRepository) Health() error {
+	return s.db.Ping()
 }

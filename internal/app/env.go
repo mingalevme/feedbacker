@@ -41,6 +41,7 @@ type Env interface {
 	MailSmtpPassword() *string
 	EmailSender() emailer.EmailSender
 	//
+	DBDriver() string
 	DBHost() string
 	DBPort() uint16
 	DBUser() string
@@ -223,6 +224,8 @@ func (s *Container) EmailSender() emailer.EmailSender {
 		s.emailer = emailer.NewSmtpEmailSender(s.MailSmtpHost(), s.MailSmtpPort(), s.MailSmtpUsername(), s.MailSmtpPassword(), s.Logger())
 	} else if driver == "array" {
 		s.emailer = emailer.NewArrayEmailSender()
+	} else if driver == "null" {
+		s.emailer = emailer.NewNullEmailSender()
 	} else {
 		panic(errors.Errorf("Unsupported emailer driver: %s", driver))
 	}

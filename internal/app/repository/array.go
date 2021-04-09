@@ -18,6 +18,10 @@ func NewArrayFeedbackRepository(logger log.Logger) *ArrayFeedbackRepository {
 	}
 }
 
+func (s *ArrayFeedbackRepository) Name() string {
+	return "array"
+}
+
 func (s *ArrayFeedbackRepository) Add(data AddFeedbackData) (model.Feedback, error)  {
 	if err := data.Validate(); err != nil {
 		return model.Feedback{}, err
@@ -42,4 +46,8 @@ func (s *ArrayFeedbackRepository) GetById(id int) (model.Feedback, error) {
 		}
 	}
 	return model.Feedback{}, ErrNotFound
+}
+
+func (s *ArrayFeedbackRepository) Health() error {
+	return nil
 }

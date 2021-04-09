@@ -11,6 +11,14 @@ type ArrayEmailSender struct {
 	Storage []ArrayEmailItem
 }
 
+func (s *ArrayEmailSender) Name() string {
+	return "array"
+}
+
+func (s *ArrayEmailSender) Health() error {
+	return nil
+}
+
 func NewArrayEmailSender() *ArrayEmailSender {
 	sender := &ArrayEmailSender{
 		Storage: []ArrayEmailItem{},
