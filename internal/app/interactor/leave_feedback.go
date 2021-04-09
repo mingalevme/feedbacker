@@ -3,6 +3,7 @@ package interactor
 import (
 	"github.com/mingalevme/feedbacker/internal/app/model"
 	"github.com/mingalevme/feedbacker/internal/app/repository"
+	"github.com/mingalevme/feedbacker/pkg/errutils"
 	"github.com/mingalevme/feedbacker/pkg/util"
 	"github.com/pkg/errors"
 )
@@ -73,11 +74,18 @@ func (s *Interactor) LeaveFeedback(input LeaveFeedbackData) (model.Feedback, err
 	if err != nil {
 		return f, err
 	}
-	//go func() {
-	if err := s.env.Notifier().Notify(f); err != nil {
-		s.env.Logger().WithError(err).Error("Error while feedback left notifying")
-	}
-	//}()
+	s.wg.Add(1)
+	go func() {
+		defer func() {
+			s.wg.Done()
+			if r := recover(); r != nil {
+				s.env.Logger().WithError(errutils.PanicToError(r)).Fatal("notifying")
+			}
+		}()
+		if err := s.env.Notifier().Notify(f); err != nil {
+			s.env.Logger().WithError(err).Error("notifying")
+		}
+	}()
 	return f, nil
 }
 

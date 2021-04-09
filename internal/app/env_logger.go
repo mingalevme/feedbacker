@@ -24,6 +24,9 @@ func (s *Container) newLogChannel(channel string) log.Logger {
 	if channel == "stdout" {
 		return s.newStdoutLogger()
 	}
+	if channel == "stderr" {
+		return s.newStderrLogger()
+	}
 	if channel == "sentry" {
 		return s.newSentryLogger()
 	}
@@ -61,6 +64,17 @@ func (s *Container) newStdoutLogger() log.Logger {
 	logrusLogger.SetOutput(os.Stdout)
 	if level, err := logrus.ParseLevel(s.EnvVarBag.Get("LOG_STDOUT_LEVEL", "debug")); err != nil {
 		panic(errors.Wrap(err, "parsing stdout logging level"))
+	} else {
+		logrusLogger.SetLevel(level)
+	}
+	return log.NewLogrusLogger(logrusLogger)
+}
+
+func (s *Container) newStderrLogger() log.Logger {
+	logrusLogger := logrus.New()
+	logrusLogger.SetOutput(os.Stderr)
+	if level, err := logrus.ParseLevel(s.EnvVarBag.Get("LOG_STDERR_LEVEL", "error")); err != nil {
+		panic(errors.Wrap(err, "parsing stderr logging level"))
 	} else {
 		logrusLogger.SetLevel(level)
 	}

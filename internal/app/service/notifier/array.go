@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"github.com/mingalevme/feedbacker/internal/app/model"
 	"github.com/mingalevme/feedbacker/pkg/log"
+	"sync"
 )
 
 type ArrayNotifier struct {
 	Storage []model.Feedback
 	Logger  log.Logger
+	mu      sync.Mutex
 }
 
 func (s *ArrayNotifier) Name() string {
@@ -21,7 +23,9 @@ func (s *ArrayNotifier) Health() error {
 
 // Sync
 func (s *ArrayNotifier) Notify(f model.Feedback) error {
+	s.mu.Lock()
 	s.Storage = append(s.Storage, f)
+	s.mu.Unlock()
 	s.Logger.WithField("_notifier", fmt.Sprintf("%T", s)).Infof("Notifying:\n%s", feedbackToMessage(f, &indent))
 	return nil
 }
