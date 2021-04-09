@@ -4,7 +4,7 @@ Example of a simple HTTP API application written in Go (router, database + migra
 ## Stack
 
 - [Project structure](https://github.com/golang-standards/project-layout)
-- Separating http logic from app
+- Separating http and app logics
 - Environment based Config + Dependency Injection: ./internal/app/env.go
 - HTTP Middleware [Echo](https://echo.labstack.com/):
   - HTTP Server
