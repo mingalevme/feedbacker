@@ -10,6 +10,31 @@ Example of a simple HTTP API application written in Go (router, database + migra
   - HTTP Server
   - Routing
   - Data binding
+- [Health check](https://tools.ietf.org/id/draft-inadarei-api-health-check-01.html)
+  ```
+  {
+    "status":"fail",
+    "output":"dial tcp 127.0.0.1:25: connect: connection refused",
+    "description":"Feedbacker - Example Go Web application - https://github.com/mingalevme/feedbacker",
+    "details":{
+      "notifier/emailer":[
+        {
+          "componentType":"component",
+          "status":"fail",
+          "time":"2021-04-09T14:40:35Z",
+          "output":"dial tcp 127.0.0.1:25: connect: connection refused"
+        }
+      ],
+      "repository/redis":[
+        {
+          "componentType":"datastore",
+          "status":"pass",
+          "time":"2021-04-09T14:40:35Z"
+        }
+      ]
+    }
+  }
+  ```
 - [Database migrations](https://github.com/golang-migrate/migrate)
 - (Multichannel) Contextable (data / error / request) logger / interface
   - Null

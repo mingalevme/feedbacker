@@ -32,6 +32,7 @@ func NewEchoServer(address string, env app.Env) *EchoHTTPServer {
 	}))
 	h := NewEchoHandlerBag(env)
 	server.GET("/ping", h.Ping)
+	server.GET("/health", h.Health)
 	server.POST("/feedback", h.LeaveFeedback)
 	server.GET("/feedback/:id", h.ViewFeedback)
 	return &EchoHTTPServer{

@@ -25,6 +25,16 @@ func (s *EchoHandlerBag) Ping(c echo.Context) error {
 	return c.String(http.StatusOK, s.services.Ping())
 }
 
+func (s *EchoHandlerBag) Health(c echo.Context) error {
+	// Content-Type: application/health+json
+	h := s.services.Health()
+	if h.Status != interactor.HealthStatusPass {
+		//return c.JSON(http.StatusFailedDependency, h)
+		return c.JSON(http.StatusBadGateway, h)
+	}
+	return c.JSON(http.StatusOK, h)
+}
+
 func (s *EchoHandlerBag) LeaveFeedback(c echo.Context) error {
 	input := &interactor.LeaveFeedbackData{}
 	if err := c.Bind(input); err != nil {
