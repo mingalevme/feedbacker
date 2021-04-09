@@ -1,16 +1,12 @@
 package util
 
 import (
-	"fmt"
+	"github.com/mingalevme/feedbacker/pkg/strutils"
 	"strings"
 )
 
-// https://play.golang.org/p/kn24JK87VI
 func Sprintf(template string, params map[string]interface{}) string {
-	for key, val := range params {
-		template = strings.Replace(template, "%{"+key+"}s", fmt.Sprintf("%s", val), -1)
-	}
-	return template
+	return strutils.Sprintf(template, params)
 }
 
 func ParseHeader(header string) map[string]*string {
@@ -29,30 +25,17 @@ func ParseHeader(header string) map[string]*string {
 }
 
 func IsNonEmptyString(s interface{}) bool {
-	return !IsEmptyString(s)
+	return strutils.IsNonEmptyString(s)
 }
 
 func IsEmptyString(s interface{}) bool {
-	switch v := s.(type) {
-	case string:
-		return strings.TrimSpace(v) == ""
-	case *string:
-		return v == nil || strings.TrimSpace(*v) == ""
-	default:
-		panic("s must be string or *string")
-	}
+	return strutils.IsEmptyString(s)
 }
 
 func IsPointerToEmptyString(s *string) bool {
-	if s == nil {
-		return true
-	}
-	if strings.TrimSpace(*s) == "" {
-		return true
-	}
-	return false
+	return strutils.IsPointerToEmptyString(s)
 }
 
 func IsPointerToNonEmptyString(s *string) bool {
-	return !IsPointerToEmptyString(s)
+	return strutils.IsPointerToNonEmptyString(s)
 }

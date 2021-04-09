@@ -11,9 +11,11 @@ import (
 	"github.com/mingalevme/feedbacker/pkg/emailer"
 	"github.com/mingalevme/feedbacker/pkg/envvarbag"
 	"github.com/mingalevme/feedbacker/pkg/log"
+	"github.com/mingalevme/feedbacker/pkg/strutils"
 	"github.com/mingalevme/feedbacker/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/rollbar/rollbar-go"
+	"github.com/slack-go/slack"
 	"os"
 	"os/user"
 	"strconv"
@@ -56,6 +58,8 @@ type Env interface {
 	RedisPass() string
 	RedisDB() uint
 	Redis() *redis.Client
+	//
+	Slack() *slack.Client
 }
 
 type Container struct {
@@ -68,6 +72,7 @@ type Container struct {
 	sentry     *sentry.Hub
 	rollbar    *rollbar.Client
 	redis      *redis.Client
+	slack      *slack.Client
 }
 
 func (s *Container) RedisAddr() string {
@@ -92,9 +97,9 @@ func (s *Container) Redis() *redis.Client {
 		return s.redis
 	}
 	s.redis = redis.NewClient(&redis.Options{
-		Addr:               s.RedisAddr(),
-		Password:           s.RedisPass(),
-		DB:                 int(s.RedisDB()),
+		Addr:     s.RedisAddr(),
+		Password: s.RedisPass(),
+		DB:       int(s.RedisDB()),
 	})
 	return s.redis
 }
@@ -208,10 +213,7 @@ func (s *Container) NotifierEmailFrom() string {
 }
 
 func (s *Container) NotifierEmailTo() string {
-	to := s.EnvVarBag.Get("NOTIFIER_EMAIL_TO", "")
-	if util.IsEmptyString(to) {
-		panic(errors.New("NOTIFIER_EMAIL_TO is empty"))
-	}
+	to := s.EnvVarBag.Require("NOTIFIER_EMAIL_TO")
 	return to
 }
 
@@ -232,25 +234,16 @@ func (s *Container) EmailSender() emailer.EmailSender {
 	return s.emailer
 }
 
-func (s *Container) NotifierEmailSubjectTemplate() string {
-	return s.EnvVarBag.Get("NOTIFIER_EMAIL_SUBJECT_TEMPLATE", "Feedback %{InstallationID}s")
-}
-
-func (s *Container) Notifier() notifier.Notifier {
-	if s.notifier != nil {
-		return s.notifier
+func (s *Container) Slack() *slack.Client {
+	if s.slack != nil {
+		return s.slack
 	}
-	driver := s.EnvVarBag.Get("NOTIFIER_DRIVER", "email")
-	if driver == "email" {
-		s.notifier = notifier.NewEmailNotifier(s.EmailSender(), s.NotifierEmailFrom(), s.NotifierEmailTo(), s.NotifierEmailSubjectTemplate(), s.Logger())
-	} else if driver == "array" {
-		s.notifier = notifier.NewArrayNotifier(s.Logger())
-	} else if driver == "null" {
-		s.notifier = notifier.NewNullNotifier()
-	} else {
-		panic(errors.Errorf("Unsupported notifier driver: %s", driver))
+	t := s.EnvVarBag.Get("SLACK_TOKEN", "")
+	if strutils.IsEmptyString(t) {
+		panic("Missing SLACK_TOKEN env var")
 	}
-	return s.notifier
+	s.slack = slack.New(t)
+	return s.slack
 }
 
 func (s *Container) Sentry() *sentry.Hub {
@@ -259,7 +252,7 @@ func (s *Container) Sentry() *sentry.Hub {
 	}
 	dsn := s.EnvVarBag.Get("SENTRY_DSN", "")
 	if util.IsEmptyString(dsn) {
-		panic("SENTRY_DSN-envvar is empty")
+		panic("Missing SENTRY_DSN env var")
 	}
 	s.sentry = s.newSentryHub(sentry.ClientOptions{
 		Dsn:         dsn,

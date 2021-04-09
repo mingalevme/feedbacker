@@ -2,12 +2,15 @@ package envvarbag
 
 import (
 	_ "github.com/lib/pq"
+	"github.com/mingalevme/feedbacker/pkg/strutils"
+	"github.com/pkg/errors"
 	"os"
 	"strings"
 )
 
 type EnvVarBag interface {
 	Get(key string, fallback string) string
+	Require(key string) string
 	With(values map[string]string) EnvVarBag
 }
 
@@ -21,6 +24,15 @@ func (s *Bag) Get(key string, fallback string) string {
 		return val
 	} else {
 		return fallback
+	}
+}
+
+func (s *Bag) Require(key string) string {
+	val, ok := s.storage[key]
+	if ok && strutils.IsNonEmptyString(val) {
+		return val
+	} else {
+		panic(errors.Errorf("Missing %s env var", key))
 	}
 }
 

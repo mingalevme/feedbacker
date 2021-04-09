@@ -19,7 +19,6 @@ Example of a simple HTTP API application written in Go (router, database + migra
   - [Sentry](https://sentry.io/)
   - Stack (multichannel)
   - Abstract Logger to implement custom logger
-  - StdLog Adapter (TODO)
 - Multi driver data repository
   - Null driver
   - Array driver
@@ -121,17 +120,27 @@ go build -gcflags="all=-N -l" && LOG_CHANNEL=null ./feedbacker
 
 #### Notifying email channel
 ```
-go build -gcflags="all=-N -l" && NOTIFIER_DRIVER=email NOTIFIER_EMAIL_TO=user@example.com ./feedbacker
+go build -gcflags="all=-N -l" && NOTIFIER_CHANNEL=email NOTIFIER_EMAIL_TO=user@example.com ./feedbacker
 ```
 
 #### Notifying memory channel
 ```
-go build -gcflags="all=-N -l" && NOTIFIER_DRIVER=array ./feedbacker
+go build -gcflags="all=-N -l" && NOTIFIER_CHANNEL=array ./feedbacker
 ```
 
 #### Notifying null channel
 ```
-go build -gcflags="all=-N -l" && NOTIFIER_DRIVER=null ./feedbacker
+go build -gcflags="all=-N -l" && NOTIFIER_CHANNEL=null ./feedbacker
+```
+
+#### Notifying slack channel
+```
+go build -gcflags="all=-N -l" && NOTIFIER_CHANNEL=slack SLACK_TOKEN="xoxb-123..." NOTIFIER_SLACK_CHANNEL_ID=ZXCVBNM ./feedbacker
+```
+
+#### Notifying stack channel
+```
+go build -gcflags="all=-N -l" && NOTIFIER_CHANNEL=stack NOTIFIER_STACK_CHANNELS=email,slack EMAILER_DRIVER=smtp NOTIFIER_EMAIL_TO="me@example.com" SLACK_TOKEN="xoxb-123..." NOTIFIER_SLACK_CHANNEL_ID=ZXCVBNM ./feedbacker
 ```
 
 ### Testing
@@ -142,5 +151,5 @@ go test -v -cover -tags testing ./...
 ### Docker (build & run)
 
 ```
-docker build -t feedbacker . && docker run -e "PERSISTENCE_DRIVER=array" -e "LOG_CHANNEL=null" -e "NOTIFIER_DRIVER=null" -e "..." -it feedbacker
+docker build -t feedbacker . && docker run -e "PERSISTENCE_DRIVER=array" -e "LOG_CHANNEL=null" -e "NOTIFIER_CHANNEL=null" -e "..." -it feedbacker
 ```

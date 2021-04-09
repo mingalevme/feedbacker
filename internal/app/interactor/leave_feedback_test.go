@@ -12,7 +12,7 @@ import (
 func TestLeaveFeedbackSuccess(t *testing.T) {
 	env := test.NewEnv(map[string]string{
 		"PERSISTENCE_DRIVER": "array",
-		"NOTIFIER_DRIVER":    "array",
+		"NOTIFIER_CHANNEL":    "array",
 	})
 	i := New(env)
 	r, _ := env.FeedbackRepository().(*repository.ArrayFeedbackRepository)
@@ -53,7 +53,7 @@ func TestLeaveFeedbackSuccess(t *testing.T) {
 func TestLeaveFeedbackUnprocessableEntity(t *testing.T) {
 	env := test.NewEnv(map[string]string{
 		"PERSISTENCE_DRIVER": "array",
-		"NOTIFIER_DRIVER":    "array",
+		"NOTIFIER_CHANNEL":    "array",
 	})
 	i := New(env)
 	r, _ := env.FeedbackRepository().(*repository.ArrayFeedbackRepository)

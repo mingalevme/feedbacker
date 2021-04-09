@@ -27,11 +27,12 @@ func (s *ArrayNotifier) Notify(f model.Feedback) error {
 }
 
 func NewArrayNotifier(logger log.Logger) *ArrayNotifier {
-	if logger == nil {
-		panic("logger is nil")
-	}
-	return &ArrayNotifier{
+	n := &ArrayNotifier{
 		Storage: []model.Feedback{},
-		Logger:  logger,
+		Logger:  log.NewNullLogger(),
 	}
+	if logger != nil {
+		n.Logger = logger
+	}
+	return n
 }
