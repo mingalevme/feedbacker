@@ -1,6 +1,6 @@
 package emailer
 
-type NullEmailSender struct {}
+type NullEmailSender struct{}
 
 func (s *NullEmailSender) Name() string {
 	return "null"

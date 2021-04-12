@@ -6,7 +6,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/getsentry/sentry-go v0.10.0
 	github.com/go-redis/redis/v8 v8.8.0
-	github.com/go-redis/redismock/v8 v8.0.6 // indirect
+	github.com/go-redis/redismock/v8 v8.0.6
 	github.com/golang-migrate/migrate/v4 v4.14.1
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/labstack/echo-contrib v0.9.0
@@ -14,8 +14,9 @@ require (
 	github.com/lib/pq v1.8.0
 	github.com/pkg/errors v0.9.1
 	github.com/rollbar/rollbar-go v1.3.0
+	github.com/rs/zerolog v1.21.0
 	github.com/sirupsen/logrus v1.7.0
-	github.com/slack-go/slack v0.8.2 // indirect
+	github.com/slack-go/slack v0.8.2
 	github.com/stretchr/testify v1.7.0
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect

@@ -21,7 +21,7 @@ func feedbackToMessage(f model.Feedback, indent *string) string {
 	b.WriteString(fmt.Sprintf("%s\n\nContext:\n", f.Text))
 	var (
 		context []byte
-		err error
+		err     error
 	)
 	if indent != nil {
 		context, err = json.MarshalIndent(f, "", *indent)

@@ -56,8 +56,8 @@ func TestRedisGetNoError(t *testing.T) {
 		t.Fatal(err)
 	}
 	mock.ExpectZRangeByScore(r.key, &redis.ZRangeBy{
-		Min:    fmt.Sprintf("%d", f1.ID),
-		Max:    fmt.Sprintf("%d", f1.ID),
+		Min: fmt.Sprintf("%d", f1.ID),
+		Max: fmt.Sprintf("%d", f1.ID),
 	}).SetVal([]string{string(j)})
 	f2, err := r.GetById(f1.ID)
 	assert.NoError(t, err)
@@ -69,8 +69,8 @@ func TestRedisGetErrNotFound(t *testing.T) {
 	r := NewRedisFeedbackRepository(client, context.Background())
 	id := model.MakeFeedback().ID
 	mock.ExpectZRangeByScore(r.key, &redis.ZRangeBy{
-		Min:    fmt.Sprintf("%d", id),
-		Max:    fmt.Sprintf("%d", id),
+		Min: fmt.Sprintf("%d", id),
+		Max: fmt.Sprintf("%d", id),
 	}).SetVal([]string{})
 	_, err := r.GetById(id)
 	assert.ErrorIs(t, err, ErrNotFound)

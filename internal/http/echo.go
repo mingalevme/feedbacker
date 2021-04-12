@@ -8,7 +8,7 @@ import (
 )
 
 type EchoHTTPServer struct {
-	echo *echo.Echo
+	echo    *echo.Echo
 	address string
 }
 

@@ -41,7 +41,7 @@ func (s *Bag) With(values map[string]string) EnvVarBag {
 		storage: map[string]string{},
 	}
 	for k, v := range s.storage {
-		 bag.storage[k] = v
+		bag.storage[k] = v
 	}
 	if values != nil {
 		for k, v := range values {

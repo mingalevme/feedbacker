@@ -1,3 +1,5 @@
+// https://martinfowler.com/articles/injection.html#UsingAServiceLocator
+
 package app
 
 import (

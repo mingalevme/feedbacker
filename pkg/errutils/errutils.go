@@ -15,4 +15,3 @@ func PanicToError(p interface{}) error {
 		return fmt.Errorf("%v", p)
 	}
 }
-

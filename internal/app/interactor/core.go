@@ -12,7 +12,7 @@ var ErrNotFound = errors.New(repository.ErrNotFound.Error())
 
 type Interactor struct {
 	env app.Env
-	wg sync.WaitGroup
+	wg  sync.WaitGroup
 }
 
 func New(env app.Env) *Interactor {

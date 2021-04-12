@@ -23,7 +23,7 @@ func TestDatabaseAddNoError(t *testing.T) {
 		AddRow(1, f1.CreatedAt)
 	mock.ExpectQuery(sql).WithArgs(f1.Service, f1.Edition, f1.Text, &extraColumnHolder{
 		Customer: f1.Customer,
-		Context: f1.Context,
+		Context:  f1.Context,
 	}).WillReturnRows(rows)
 	r := NewDatabaseFeedbackRepository(db, nil)
 	f2, err := r.Add(data)
@@ -44,7 +44,7 @@ func TestDatabaseGetNoError(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"service", "edition", "text", "extra", "created_at", "updated_at"})
 	rows.AddRow(f1.Service, f1.Edition, f1.Text, &extraColumnHolder{
 		Customer: f1.Customer,
-		Context: f1.Context,
+		Context:  f1.Context,
 	}, f1.CreatedAt, f1.UpdatedAt)
 	mock.ExpectQuery(sql).WithArgs(f1.ID).WillReturnRows(rows)
 	r := NewDatabaseFeedbackRepository(db, nil)

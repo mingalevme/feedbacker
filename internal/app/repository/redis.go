@@ -11,15 +11,15 @@ import (
 )
 
 type RedisFeedbackRepository struct {
-	redis *redis.Client
-	key string
+	redis   *redis.Client
+	key     string
 	context context.Context
 }
 
 func NewRedisFeedbackRepository(redis *redis.Client, context context.Context) *RedisFeedbackRepository {
 	return &RedisFeedbackRepository{
-		redis: redis,
-		key: "feedback",
+		redis:   redis,
+		key:     "feedback",
 		context: context,
 	}
 }
@@ -28,7 +28,7 @@ func (s *RedisFeedbackRepository) Name() string {
 	return "redis"
 }
 
-func (s *RedisFeedbackRepository) Add(data AddFeedbackData) (model.Feedback, error)  {
+func (s *RedisFeedbackRepository) Add(data AddFeedbackData) (model.Feedback, error) {
 	if err := data.Validate(); err != nil {
 		return model.Feedback{}, err
 	}
@@ -63,8 +63,8 @@ func (s *RedisFeedbackRepository) getNextID() int {
 
 func (s *RedisFeedbackRepository) GetById(id int) (model.Feedback, error) {
 	z, err := s.redis.ZRangeByScore(s.context, s.key, &redis.ZRangeBy{
-		Min:    fmt.Sprintf("%d", id),
-		Max:    fmt.Sprintf("%d", id),
+		Min: fmt.Sprintf("%d", id),
+		Max: fmt.Sprintf("%d", id),
 	}).Result()
 	if err != nil {
 		return model.Feedback{}, errors.Wrap(err, "redis feedback repository: get: z-range-by-score")

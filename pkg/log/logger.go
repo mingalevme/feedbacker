@@ -1,6 +1,8 @@
 package log
 
-import "net/http"
+import (
+	"net/http"
+)
 
 type Fields map[string]interface{}
 
@@ -57,3 +59,11 @@ type Logger interface {
 //	WithTime(t time.Time) Entry
 //	String() (string, error)
 //}
+
+var RequestTransformer = func(r *http.Request) map[string]interface{} {
+	return map[string]interface{}{
+		"url":     r.URL.String(),
+		"method":  r.Method,
+		"headers": r.Header,
+	}
+}

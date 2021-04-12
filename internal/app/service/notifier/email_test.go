@@ -28,7 +28,7 @@ func TestEmailHealthNoErr(t *testing.T) {
 }
 
 func TestEmailHealthErr(t *testing.T) {
-	sender := emailer.NewSmtpEmailSender("localhost", uint16(49152), nil,  nil, nil)
+	sender := emailer.NewSmtpEmailSender("localhost", uint16(49152), nil, nil, nil)
 	notifier := NewEmailNotifier(sender, "from@mail.com", "to.mail.com", "New %{InstallationID}s", nil)
 	err := notifier.Health()
 	var e *net.OpError

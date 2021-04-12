@@ -28,5 +28,3 @@ type Feedback interface {
 	GetById(id int) (model.Feedback, error)
 	Health() error
 }
-
-

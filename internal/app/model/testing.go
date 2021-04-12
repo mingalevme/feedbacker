@@ -16,7 +16,7 @@ import (
 func MakeFeedback() Feedback {
 	context := MakeContext()
 	customer := MakeCustomer()
-	t := time.Unix(time.Now().Unix() - int64(rand.Intn(60*60*24*30)), 0)
+	t := time.Unix(time.Now().Unix()-int64(rand.Intn(60*60*24*30)), 0)
 	return Feedback{
 		ID:        int(rand.Uint64()),
 		Service:   "feedbacker",

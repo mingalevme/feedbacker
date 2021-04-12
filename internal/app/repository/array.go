@@ -22,7 +22,7 @@ func (s *ArrayFeedbackRepository) Name() string {
 	return "array"
 }
 
-func (s *ArrayFeedbackRepository) Add(data AddFeedbackData) (model.Feedback, error)  {
+func (s *ArrayFeedbackRepository) Add(data AddFeedbackData) (model.Feedback, error) {
 	if err := data.Validate(); err != nil {
 		return model.Feedback{}, err
 	}
@@ -31,7 +31,7 @@ func (s *ArrayFeedbackRepository) Add(data AddFeedbackData) (model.Feedback, err
 	f.CreatedAt = time.Now()
 	f.UpdatedAt = time.Now()
 	s.Storage = append(s.Storage, f)
-	s.Logger.Debugf("Created item: #%+v", f)
+	s.Logger.WithField("feedback", f).Debug("Created item")
 	return f, nil
 }
 

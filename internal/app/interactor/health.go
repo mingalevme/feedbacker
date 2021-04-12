@@ -44,11 +44,11 @@ func (s *Interactor) Health() Health {
 	err = r.Health()
 	repoCompName := fmt.Sprintf("repository/%s", r.Name())
 	repoCompDetail := ComponentDetail{
-		Status: HealthStatusPass,
+		Status:        HealthStatusPass,
 		ComponentType: "datastore",
-		Time: timeutils.Now().UTC().Format(time.RFC3339),
+		Time:          timeutils.Now().UTC().Format(time.RFC3339),
 	}
-	if  err != nil {
+	if err != nil {
 		h.Status = HealthStatusFail
 		h.Output = fmt.Sprintf("%s; %s", h.Output, err.Error())
 		repoCompDetail.Status = HealthStatusFail
@@ -60,9 +60,9 @@ func (s *Interactor) Health() Health {
 	err = n.Health()
 	notifierCompName := fmt.Sprintf("notifier/%s", n.Name())
 	notifierCompDetail := ComponentDetail{
-		Status: HealthStatusPass,
+		Status:        HealthStatusPass,
 		ComponentType: "component",
-		Time: timeutils.Now().UTC().Format(time.RFC3339),
+		Time:          timeutils.Now().UTC().Format(time.RFC3339),
 	}
 	if err != nil {
 		h.Status = HealthStatusFail

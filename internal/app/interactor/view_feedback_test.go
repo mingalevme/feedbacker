@@ -29,4 +29,3 @@ func TestViewFeedbackNotFound(t *testing.T) {
 	_, err := i.ViewFeedback(1)
 	assert.ErrorIs(t, ErrNotFound, err)
 }
-

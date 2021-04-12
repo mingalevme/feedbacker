@@ -55,6 +55,6 @@ func (s *StackLogger) Log(level Level, args ...interface{}) {
 	}
 }
 
-func (s *StackLogger) Add(logger Logger)  {
+func (s *StackLogger) Add(logger Logger) {
 	s.loggers = append(s.loggers, logger)
 }

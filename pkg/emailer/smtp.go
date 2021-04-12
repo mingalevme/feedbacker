@@ -51,8 +51,8 @@ func (s *SmtpEmailSender) Health() error {
 func (s *SmtpEmailSender) Send(from string, to string, subject string, message string) error {
 	context := map[string]interface{}{
 		"_sender": fmt.Sprintf("%T", s),
-		"from": from,
-		"to": to,
+		"from":    from,
+		"to":      to,
 		"message": message,
 	}
 	s.logger.WithFields(context).Info("Sending email")

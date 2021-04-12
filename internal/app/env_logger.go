@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/mingalevme/feedbacker/pkg/log"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/sirupsen/logrus"
 	"os"
 	"strings"
@@ -18,25 +19,24 @@ func (s *Container) Logger() log.Logger {
 }
 
 func (s *Container) newLogChannel(channel string) log.Logger {
-	if channel == "null" {
-		return s.newNullLogger()
-	}
-	if channel == "stdout" {
+	switch channel {
+	case "stdout":
 		return s.newStdoutLogger()
-	}
-	if channel == "stderr" {
+	case "stderr":
 		return s.newStderrLogger()
-	}
-	if channel == "sentry" {
+	case "zerolog":
+		return s.newZerologLogger()
+	case "sentry":
 		return s.newSentryLogger()
-	}
-	if channel == "rollbar" {
+	case "rollbar":
 		return s.newRollbarLogger()
-	}
-	if channel == "stack" {
+	case "stack":
 		return s.newStackLogger()
+	case "null":
+		return s.newNullLogger()
+	default:
+		panic(errors.Errorf("unsupported log channel: %s", channel))
 	}
-	panic(errors.Errorf("unsupported log channel: %s", channel))
 }
 
 func (s *Container) newStackLogger() log.Logger {
@@ -79,6 +79,16 @@ func (s *Container) newStderrLogger() log.Logger {
 		logrusLogger.SetLevel(level)
 	}
 	return log.NewLogrusLogger(logrusLogger)
+}
+
+func (s *Container) newZerologLogger() log.Logger {
+	z := zerolog.New(os.Stderr).With().Timestamp().Logger()
+	if level, err := zerolog.ParseLevel(s.EnvVarBag.Get("LOG_ZEROLOG_LEVEL", "debug")); err != nil {
+		panic(errors.Wrap(err, "parsing zerolog logging level"))
+	} else {
+		z = z.Level(level)
+	}
+	return log.NewZerologLogger(z)
 }
 
 func (s *Container) newSentryLogger() log.Logger {

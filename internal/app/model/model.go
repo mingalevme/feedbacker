@@ -28,9 +28,9 @@ func (s Customer) isEmpty() bool {
 type Feedback struct {
 	ID        int       `json:"id" xml:"Id" param:"id" query:"id" form:"id"`
 	Service   string    `json:"service" xml:"Service" param:"service" query:"service" form:"service"`
-	Edition   *string    `json:"edition" xml:"Edition" param:"edition" query:"edition" form:"edition"`
+	Edition   *string   `json:"edition" xml:"Edition" param:"edition" query:"edition" form:"edition"`
 	Text      string    `json:"text" xml:"Text" param:"text" query:"text" form:"text"`
-	Context   *Context   `json:"context,omitempty" xml:"Context" param:"context" query:"context" form:"context"`
+	Context   *Context  `json:"context,omitempty" xml:"Context" param:"context" query:"context" form:"context"`
 	Customer  *Customer `json:"customer,omitempty" xml:"Customer" param:"customer" query:"customer" form:"customer"`
 	CreatedAt time.Time `json:"createdAt,omitempty" xml:"CreatedAt"`
 	UpdatedAt time.Time `json:"updatedAt,omitempty" xml:"UpdatedAt"`
