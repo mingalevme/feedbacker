@@ -6,13 +6,21 @@ import (
 
 type Fields map[string]interface{}
 
+type Clonable interface {
+	Clone() interface{}
+}
+
 func (f Fields) Clone() Fields {
 	if f == nil {
 		return nil
 	}
 	clone := Fields{}
 	for key, value := range f {
-		clone[key] = value
+		if clonable, ok := value.(Clonable); ok {
+			clone[key] = clonable.Clone()
+		} else {
+			clone[key] = value
+		}
 	}
 	return clone
 }
@@ -51,6 +59,7 @@ type Logger interface {
 	//Errorln(args ...interface{})
 	//Fatalln(args ...interface{})
 	//Panicln(args ...interface{})
+	Close()
 }
 
 //type Entry interface {
@@ -60,7 +69,7 @@ type Logger interface {
 //	String() (string, error)
 //}
 
-var RequestTransformer = func(r *http.Request) map[string]interface{} {
+var RequestToMapTransformer = func(r *http.Request) map[string]interface{} {
 	return map[string]interface{}{
 		"url":     r.URL.String(),
 		"method":  r.Method,

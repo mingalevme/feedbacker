@@ -58,3 +58,9 @@ func (s *StackLogger) Log(level Level, args ...interface{}) {
 func (s *StackLogger) Add(logger Logger) {
 	s.loggers = append(s.loggers, logger)
 }
+
+func (s *StackLogger) Close() {
+	for _, logger := range s.loggers {
+		logger.Close()
+	}
+}

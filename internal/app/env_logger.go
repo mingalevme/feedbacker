@@ -5,6 +5,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"os"
 	"strings"
 )
@@ -26,6 +27,8 @@ func (s *Container) newLogChannel(channel string) log.Logger {
 		return s.newStderrLogger()
 	case "zerolog":
 		return s.newZerologLogger()
+	case "zap":
+		return s.newZapLogger()
 	case "sentry":
 		return s.newSentryLogger()
 	case "rollbar":
@@ -105,4 +108,18 @@ func (s *Container) newRollbarLogger() log.Logger {
 		panic(errors.Wrap(err, "parsing rollbar log level (LOG_ROLLBAR_LEVEL)"))
 	}
 	return log.NewRollbarLogger(s.Rollbar(), level)
+}
+
+func (s *Container) newZapLogger() log.Logger {
+	cfg := zap.NewProductionConfig()
+	if zapLevel, err := log.ParseZapLevel(s.EnvVarBag.Get("LOG_ZAP_LEVEL", "debug")); err != nil {
+		panic(errors.Wrap(err, "parsing zap logging level"))
+	} else {
+		cfg.Level = zap.NewAtomicLevelAt(zapLevel)
+	}
+	if z, err := cfg.Build(); err != nil {
+		panic(errors.Wrap(err, "building zap logger"))
+	} else {
+		return log.NewZapLogger(z)
+	}
 }

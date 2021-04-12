@@ -6,6 +6,9 @@ import (
 	"net/http"
 )
 
+// ZerologLogger is just an example of wrapping the zerolog in the app Logger,
+// but it breaks all it's (zerolog) benefits - zero allocations.
+// So using this logger does not make sense - for educational purposes only.
 type ZerologLogger struct {
 	*AbstractLogger
 	zlogger zerolog.Logger
@@ -20,7 +23,7 @@ func NewZerologLogger(logger zerolog.Logger) *ZerologLogger {
 	l := &ZerologLogger{
 		AbstractLogger: a,
 		zlogger:        logger,
-		fields:         map[string]interface{}{},
+		fields:         Fields{},
 		req:            nil,
 		err:            nil,
 	}
@@ -59,7 +62,7 @@ func (s *ZerologLogger) WithRequest(req *http.Request) Logger {
 func (s *ZerologLogger) Log(level Level, args ...interface{}) {
 	logger := s.zlogger
 	if s.req != nil {
-		logger = logger.With().Interface("request", RequestTransformer(s.req)).Logger()
+		logger = logger.With().Interface("request", RequestToMapTransformer(s.req)).Logger()
 	}
 	zerologLevel, err := zerolog.ParseLevel(level.String())
 	if err != nil {

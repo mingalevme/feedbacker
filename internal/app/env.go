@@ -62,6 +62,8 @@ type Env interface {
 	Redis() *redis.Client
 	//
 	Slack() *slack.Client
+	//
+	Close()
 }
 
 type Container struct {
@@ -286,4 +288,10 @@ func (s *Container) Rollbar() *rollbar.Client {
 	s.rollbar = rollbar.New(token, s.AppEnv(), "", "", "")
 	s.rollbar.SetFingerprint(true)
 	return s.rollbar
+}
+
+func (s *Container) Close() {
+	if s.logger != nil {
+		s.logger.Close()
+	}
 }

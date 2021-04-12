@@ -73,3 +73,5 @@ func (s *AbstractLogger) Error(args ...interface{}) {
 func (s *AbstractLogger) Fatal(args ...interface{}) {
 	s.Log(LevelFatal, args...)
 }
+
+func Close() {}
