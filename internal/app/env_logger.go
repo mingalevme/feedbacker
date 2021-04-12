@@ -19,6 +19,7 @@ func (s *Container) Logger() log.Logger {
 	return s.logger
 }
 
+// todo: go-kit, apex/log
 func (s *Container) newLogChannel(channel string) log.Logger {
 	switch channel {
 	case "stdout":
