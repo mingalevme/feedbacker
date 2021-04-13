@@ -1,4 +1,4 @@
-package interactor
+package view_feedback
 
 import (
 	"github.com/mingalevme/feedbacker/internal/app/model"
@@ -29,3 +29,4 @@ func TestViewFeedbackNotFound(t *testing.T) {
 	_, err := i.ViewFeedback(1)
 	assert.ErrorIs(t, ErrNotFound, err)
 }
+

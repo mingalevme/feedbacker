@@ -1,4 +1,4 @@
-package interactor
+package leave_feedback
 
 import (
 	"github.com/mingalevme/feedbacker/internal/app/model"

@@ -24,27 +24,27 @@ import (
 )
 
 type Env interface {
-	AppEnv() string
+	EnvironmentID() string
 	Debug() bool
-	// HTTP
+
 	MaxPostRequestBodyLength() uint
 	LogRequests() bool
-	//
+
 	FeedbackRepository() repository.Feedback
-	//
+
 	Logger() log.Logger
-	//
+
 	NotifierEmailFrom() string
 	NotifierEmailTo() string
 	NotifierEmailSubjectTemplate() string
 	Notifier() notifier.Notifier
-	//
+
 	MailSmtpHost() string
 	MailSmtpPort() uint16
 	MailSmtpUsername() *string
 	MailSmtpPassword() *string
 	EmailSender() emailer.EmailSender
-	//
+
 	DBDriver() string
 	DBHost() string
 	DBPort() uint16
@@ -52,17 +52,18 @@ type Env interface {
 	DBPass() string
 	DBName() string
 	DatabaseConnection() *sql.DB
-	//
+
 	Sentry() *sentry.Hub
 	Rollbar() *rollbar.Client
-	//
+
 	RedisAddr() string
 	RedisPass() string
 	RedisDB() uint
 	Redis() *redis.Client
-	//
+
 	Slack() *slack.Client
-	//
+
+	Build()
 	Close()
 }
 
@@ -79,37 +80,7 @@ type Container struct {
 	slack      *slack.Client
 }
 
-func (s *Container) RedisAddr() string {
-	return s.getEnvVar("REDIS_ADDR", "127.0.0.1:6379")
-}
-
-func (s *Container) RedisPass() string {
-	return s.getEnvVar("REDIS_PASS", "")
-}
-
-func (s *Container) RedisDB() uint {
-	v := s.getEnvVar("REDIS_DB", "0")
-	n, err := strconv.ParseUint(v, 10, 0)
-	if err != nil {
-		panic(errors.Wrap(err, "Error while parsing REDIS_DB env-var"))
-	}
-	return uint(n)
-}
-
-func (s *Container) Redis() *redis.Client {
-	if s.redis != nil {
-		return s.redis
-	}
-	s.redis = redis.NewClient(&redis.Options{
-		Addr:     s.RedisAddr(),
-		Password: s.RedisPass(),
-		DB:       int(s.RedisDB()),
-	})
-	return s.redis
-}
-
 func NewEnv(e envvarbag.EnvVarBag) *Container {
-
 	return &Container{
 		EnvVarBag: e,
 	}
@@ -119,7 +90,7 @@ func (s *Container) getEnvVar(key, fallback string) string {
 	return s.EnvVarBag.Get(key, fallback)
 }
 
-func (s *Container) AppEnv() string {
+func (s *Container) EnvironmentID() string {
 	return s.EnvVarBag.Get("APP_ENV", "production")
 }
 
@@ -261,7 +232,7 @@ func (s *Container) Sentry() *sentry.Hub {
 	s.sentry = s.newSentryHub(sentry.ClientOptions{
 		Dsn:         dsn,
 		Debug:       s.Debug(),
-		Environment: s.AppEnv(),
+		Environment: s.EnvironmentID(),
 	})
 	s.sentry.ConfigureScope(func(scope *sentry.Scope) {
 		scope.SetFingerprint([]string{"{{ default }}", "{{ message }}", "{{ error.type }}", "{{ error.value }}"})
@@ -285,9 +256,44 @@ func (s *Container) Rollbar() *rollbar.Client {
 	if util.IsEmptyString(token) {
 		panic("ROLLBAR_TOKEN-envvar is empty")
 	}
-	s.rollbar = rollbar.New(token, s.AppEnv(), "", "", "")
+	s.rollbar = rollbar.New(token, s.EnvironmentID(), "", "", "")
 	s.rollbar.SetFingerprint(true)
 	return s.rollbar
+}
+
+func (s *Container) RedisAddr() string {
+	return s.getEnvVar("REDIS_ADDR", "127.0.0.1:6379")
+}
+
+func (s *Container) RedisPass() string {
+	return s.getEnvVar("REDIS_PASS", "")
+}
+
+func (s *Container) RedisDB() uint {
+	v := s.getEnvVar("REDIS_DB", "0")
+	n, err := strconv.ParseUint(v, 10, 0)
+	if err != nil {
+		panic(errors.Wrap(err, "Error while parsing REDIS_DB env-var"))
+	}
+	return uint(n)
+}
+
+func (s *Container) Redis() *redis.Client {
+	if s.redis != nil {
+		return s.redis
+	}
+	s.redis = redis.NewClient(&redis.Options{
+		Addr:     s.RedisAddr(),
+		Password: s.RedisPass(),
+		DB:       int(s.RedisDB()),
+	})
+	return s.redis
+}
+
+func (s *Container) Build() {
+	s.FeedbackRepository()
+	s.Logger()
+	s.Notifier()
 }
 
 func (s *Container) Close() {

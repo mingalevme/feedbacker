@@ -1,7 +1,8 @@
-package interactor
+package health
 
 import (
 	"fmt"
+	"github.com/mingalevme/feedbacker/internal/app"
 	"github.com/mingalevme/feedbacker/pkg/timeutils"
 	"strings"
 	"time"
@@ -13,14 +14,14 @@ const HealthStatusPass = "pass"
 const HealthStatusWarn = "warn"
 const HealthStatusFail = "fail"
 
-type Health struct {
-	Status      string                       `json:"status,omitempty"`
-	Output      string                       `json:"output,omitempty"`
-	Description string                       `json:"description,omitempty"`
-	Details     map[string][]ComponentDetail `json:"details,omitempty"`
+type HealthData struct {
+	Status      string                           `json:"status,omitempty"`
+	Output      string                           `json:"output,omitempty"`
+	Description string                           `json:"description,omitempty"`
+	Details     map[string][]ComponentDetailData `json:"details,omitempty"`
 }
 
-type ComponentDetail struct {
+type ComponentDetailData struct {
 	ComponentID   string `json:"componentId,omitempty"`
 	ComponentType string `json:"componentType,omitempty"`
 	MetricValue   int    `json:"metricValue,omitempty"`
@@ -30,12 +31,22 @@ type ComponentDetail struct {
 	Output        string `json:"output,omitempty"`
 }
 
-func (s *Interactor) Health() Health {
-	h := Health{
+type Health struct {
+	env app.Env
+}
+
+func New(env app.Env) *Health {
+	return &Health{
+		env: env,
+	}
+}
+
+func (s *Health) Health() HealthData {
+	h := HealthData{
 		Status:      HealthStatusPass,
 		Output:      "",
 		Description: "Feedbacker - Example Go Web application - https://github.com/mingalevme/feedbacker",
-		Details:     map[string][]ComponentDetail{},
+		Details:     map[string][]ComponentDetailData{},
 	}
 	//
 	var err error
@@ -43,7 +54,7 @@ func (s *Interactor) Health() Health {
 	r := s.env.FeedbackRepository()
 	err = r.Health()
 	repoCompName := fmt.Sprintf("repository/%s", r.Name())
-	repoCompDetail := ComponentDetail{
+	repoCompDetail := ComponentDetailData{
 		Status:        HealthStatusPass,
 		ComponentType: "datastore",
 		Time:          timeutils.Now().UTC().Format(time.RFC3339),
@@ -59,7 +70,7 @@ func (s *Interactor) Health() Health {
 	n := s.env.Notifier()
 	err = n.Health()
 	notifierCompName := fmt.Sprintf("notifier/%s", n.Name())
-	notifierCompDetail := ComponentDetail{
+	notifierCompDetail := ComponentDetailData{
 		Status:        HealthStatusPass,
 		ComponentType: "component",
 		Time:          timeutils.Now().UTC().Format(time.RFC3339),

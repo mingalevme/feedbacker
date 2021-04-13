@@ -3,32 +3,40 @@ package http
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/mingalevme/feedbacker/internal/app"
-	"github.com/mingalevme/feedbacker/internal/app/interactor"
+	"github.com/mingalevme/feedbacker/internal/app/interactor/health"
+	"github.com/mingalevme/feedbacker/internal/app/interactor/leave_feedback"
+	"github.com/mingalevme/feedbacker/internal/app/interactor/ping"
+	"github.com/mingalevme/feedbacker/internal/app/interactor/view_feedback"
 	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
 )
 
 type EchoHandlerBag struct {
-	env      app.Env
-	services *interactor.Interactor
+	env           app.Env
+	ping          *ping.Ping
+	health        *health.Health
+	leaveFeedback *leave_feedback.LeaveFeedback
+	viewFeedback  *view_feedback.ViewFeedback
 }
 
 func NewEchoHandlerBag(env app.Env) *EchoHandlerBag {
 	return &EchoHandlerBag{
-		env:      env,
-		services: interactor.New(env),
+		env:           env,
+		ping:          ping.New(env),
+		leaveFeedback: leave_feedback.New(env),
+		viewFeedback:  view_feedback.New(env),
 	}
 }
 
 func (s *EchoHandlerBag) Ping(c echo.Context) error {
-	return c.String(http.StatusOK, s.services.Ping())
+	return c.String(http.StatusOK, s.ping.Ping())
 }
 
 func (s *EchoHandlerBag) Health(c echo.Context) error {
 	// Content-Type: application/health+json
-	h := s.services.Health()
-	if h.Status != interactor.HealthStatusPass {
+	h := s.health.Health()
+	if h.Status != health.HealthStatusPass {
 		//return c.JSON(http.StatusFailedDependency, h)
 		return c.JSON(http.StatusBadGateway, h)
 	}
@@ -36,12 +44,12 @@ func (s *EchoHandlerBag) Health(c echo.Context) error {
 }
 
 func (s *EchoHandlerBag) LeaveFeedback(c echo.Context) error {
-	input := &interactor.LeaveFeedbackData{}
+	input := &leave_feedback.LeaveFeedbackData{}
 	if err := c.Bind(input); err != nil {
 		return err
 	}
-	f, err := s.services.LeaveFeedback(*input)
-	if errors.Is(err, interactor.ErrUnprocessableEntity) {
+	f, err := s.leaveFeedback.LeaveFeedback(*input)
+	if errors.Is(err, leave_feedback.ErrUnprocessableEntity) {
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
 	}
 	if err != nil {
@@ -58,8 +66,8 @@ func (s *EchoHandlerBag) ViewFeedback(c echo.Context) error {
 	if err != nil || id < 1 {
 		return echo.ErrNotFound
 	}
-	f, err := s.services.ViewFeedback(id)
-	if err == interactor.ErrNotFound {
+	f, err := s.viewFeedback.ViewFeedback(id)
+	if err == view_feedback.ErrNotFound {
 		return echo.ErrNotFound
 	}
 	if err != nil {

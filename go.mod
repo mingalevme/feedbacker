@@ -18,6 +18,7 @@ require (
 	github.com/sirupsen/logrus v1.7.0
 	github.com/slack-go/slack v0.8.2
 	github.com/stretchr/testify v1.7.0
+	go.uber.org/fx v1.13.1 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.16.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

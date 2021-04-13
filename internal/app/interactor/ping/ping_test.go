@@ -1,4 +1,4 @@
-package interactor
+package ping
 
 import (
 	"github.com/mingalevme/feedbacker/test"
@@ -7,6 +7,6 @@ import (
 )
 
 func TestPing(t *testing.T) {
-	i := New(test.NewEnv(nil))
-	assert.Equal(t, "pong", i.Ping())
+	ping := New(test.NewEnv(nil))
+	assert.Equal(t, "pong", ping.Ping())
 }

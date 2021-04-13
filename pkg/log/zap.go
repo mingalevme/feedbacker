@@ -15,9 +15,9 @@ type ZapLogger struct {
 	*AbstractLogger
 	zap *zap.Logger
 	//level   Level
-	fields  Fields
-	req     *http.Request
-	err     error
+	fields Fields
+	req    *http.Request
+	err    error
 }
 
 func NewZapLogger(logger *zap.Logger) *ZapLogger {

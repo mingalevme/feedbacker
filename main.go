@@ -12,6 +12,7 @@ import (
 func main() {
 	envVarBag := envvarbag.New()
 	var env app.Env = app.NewEnv(envVarBag)
+	env.Build()
 	address := envVarBag.Get("HTTP_LISTEN_ADDRESS", "0.0.0.0:8080")
 	var s http.Server = http.NewEchoServer(address, env)
 	go func() {
