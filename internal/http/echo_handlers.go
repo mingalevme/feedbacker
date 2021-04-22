@@ -24,6 +24,7 @@ func NewEchoHandlerBag(env app.Env) *EchoHandlerBag {
 	return &EchoHandlerBag{
 		env:           env,
 		ping:          ping.New(env),
+		health:        health.New(env),
 		leaveFeedback: leave_feedback.New(env),
 		viewFeedback:  view_feedback.New(env),
 	}

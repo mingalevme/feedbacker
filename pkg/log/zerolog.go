@@ -8,7 +8,7 @@ import (
 
 // ZerologLogger is just an example of wrapping the zerolog in the app Logger,
 // but it breaks all it's (zerolog) benefits - zero allocations.
-// So using this logger does not make sense - for educational purposes only.
+// So use the wrapper for educational purposes only.
 type ZerologLogger struct {
 	*AbstractLogger
 	zlogger zerolog.Logger

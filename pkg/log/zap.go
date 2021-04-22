@@ -8,9 +8,9 @@ import (
 	"net/http"
 )
 
-// ZapLogger is just an example of wrapping the zerolog in the app Logger,
+// ZapLogger is just an example of wrapping the zap-logger in the app Logger,
 // but it breaks all it's (zap) benefits - zero allocations.
-// So using this logger does not make sense - for educational purposes only.
+// So use the wrapper for educational purposes only.
 type ZapLogger struct {
 	*AbstractLogger
 	zap *zap.Logger
