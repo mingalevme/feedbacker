@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"encoding/json"
 	"github.com/mingalevme/feedbacker/internal/app/model"
 	"github.com/mingalevme/feedbacker/pkg/log"
 	"time"
@@ -31,7 +32,10 @@ func (s *ArrayFeedbackRepository) Add(data AddFeedbackData) (model.Feedback, err
 	f.CreatedAt = time.Now()
 	f.UpdatedAt = time.Now()
 	s.Storage = append(s.Storage, f)
-	s.Logger.WithField("feedback", f).Debug("Created item")
+	s.Logger.WithField("feedback", func() string {
+		j, _ := json.Marshal(f)
+		return string(j)
+	}()).Debugf("%T: Created item", s)
 	return f, nil
 }
 

@@ -1,6 +1,7 @@
 package health
 
 import (
+	"github.com/mingalevme/feedbacker/internal/app"
 	"github.com/mingalevme/feedbacker/pkg/timeutils"
 	"github.com/mingalevme/feedbacker/test"
 	"github.com/pkg/errors"
@@ -12,15 +13,12 @@ import (
 func TestHealthSuccess(t *testing.T) {
 	now := time.Now()
 	timeutils.SetTestNow(now)
-	env := test.NewEnv(map[string]string{
-		"PERSISTENCE_DRIVER": "array",
-		"NOTIFIER_CHANNEL":   "array",
-	})
+	env := testEnv()
 	i := New(env)
 	h := i.Health()
 	assert.Equal(t, HealthStatusPass, h.Status)
 	assert.Equal(t, "", h.Output)
-	assert.Len(t, h.Details, 2)
+	assert.Len(t, h.Details, 3)
 	//
 	repoCompName := "repository/array"
 	assert.Len(t, h.Details[repoCompName], 1)
@@ -33,13 +31,16 @@ func TestHealthSuccess(t *testing.T) {
 	assert.Equal(t, HealthStatusPass, h.Details[notifierCompName][0].Status)
 	assert.Equal(t, now.UTC().Format(time.RFC3339), h.Details[notifierCompName][0].Time)
 	assert.Equal(t, "", h.Details[notifierCompName][0].Output)
+	//
+	dispatcherCompName := "dispatcher/sync"
+	assert.Len(t, h.Details[dispatcherCompName], 1)
+	assert.Equal(t, HealthStatusPass, h.Details[dispatcherCompName][0].Status)
+	assert.Equal(t, now.UTC().Format(time.RFC3339), h.Details[dispatcherCompName][0].Time)
+	assert.Equal(t, "", h.Details[dispatcherCompName][0].Output)
 }
 
 func TestHealthRepoError(t *testing.T) {
-	env := test.NewEnv(map[string]string{
-		"PERSISTENCE_DRIVER": "array",
-		"NOTIFIER_CHANNEL":   "array",
-	})
+	env := testEnv()
 	r := &test.HealthErrorRepository{
 		Err: errors.New("TEST"),
 	}
@@ -50,7 +51,7 @@ func TestHealthRepoError(t *testing.T) {
 	repoCompName := "repository/error"
 	//
 	assert.Equal(t, HealthStatusFail, h.Status)
-	assert.Equal(t, repoCompName + ": TEST", h.Output)
+	assert.Equal(t, repoCompName+": TEST", h.Output)
 	//
 	assert.Len(t, h.Details[repoCompName], 1)
 	assert.Equal(t, HealthStatusFail, h.Details[repoCompName][0].Status)
@@ -58,10 +59,7 @@ func TestHealthRepoError(t *testing.T) {
 }
 
 func TestHealthNotifierError(t *testing.T) {
-	env := test.NewEnv(map[string]string{
-		"PERSISTENCE_DRIVER": "array",
-		"NOTIFIER_CHANNEL":   "array",
-	})
+	env := testEnv()
 	n := &test.HealthErrorNotifier{
 		Err: errors.New("TEST"),
 	}
@@ -77,4 +75,37 @@ func TestHealthNotifierError(t *testing.T) {
 	assert.Len(t, h.Details[compName], 1)
 	assert.Equal(t, HealthStatusFail, h.Details[compName][0].Status)
 	assert.Equal(t, "TEST", h.Details[compName][0].Output)
+}
+
+func TestHealthDispatcherError(t *testing.T) {
+	env := testEnv()
+	d := &test.HealthErrorDispatcher{
+		Err: errors.New("TEST"),
+	}
+	env.SetDispatcher(d)
+	i := New(env)
+	h := i.Health()
+	//
+	compName := "dispatcher/error"
+	//
+	assert.Equal(t, HealthStatusFail, h.Status)
+	assert.Equal(t, compName+": TEST", h.Output)
+	//
+	assert.Len(t, h.Details[compName], 1)
+	assert.Equal(t, HealthStatusFail, h.Details[compName][0].Status)
+	assert.Equal(t, "TEST", h.Details[compName][0].Output)
+}
+
+func testEnv(values ...map[string]string) *app.Container {
+	base := map[string]string{
+		"PERSISTENCE_DRIVER": "array",
+		"NOTIFIER_CHANNEL":   "array",
+		"DISPATCHER_DRIVER":  "sync",
+	}
+	for _, m := range values {
+		for k, v := range m {
+			base[k] = v
+		}
+	}
+	return test.NewEnv(base)
 }

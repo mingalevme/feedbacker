@@ -10,6 +10,12 @@ Example of a simple HTTP API application written in Go (router, database + migra
   - HTTP Server
   - Routing
   - Data binding
+- Multi driver task Queue:
+  - (Go) Channel: distributed with limiting the number of processes
+  - Goroutine: distributed
+  - Sync
+  - Array
+  - Null
 - [Health check](https://tools.ietf.org/id/draft-inadarei-api-health-check-01.html)
   ```
   {
@@ -28,6 +34,13 @@ Example of a simple HTTP API application written in Go (router, database + migra
       "repository/redis":[
         {
           "componentType":"datastore",
+          "status":"pass",
+          "time":"2021-04-09T14:40:35Z"
+        }
+      ],
+      "dispatcher/chan":[
+        {
+          "componentType":"component",
           "status":"pass",
           "time":"2021-04-09T14:40:35Z"
         }
@@ -177,4 +190,21 @@ go test -v -cover -tags testing ./...
 
 ```
 docker build -t feedbacker . && docker run -e "PERSISTENCE_DRIVER=array" -e "LOG_CHANNEL=null" -e "NOTIFIER_CHANNEL=null" -e "..." -it feedbacker
+```
+
+## Requests
+
+### Ping
+```
+curl "http://localhost:8080/ping"
+```
+
+### Leave feedback via JSON
+```
+curl "http://localhost:8080/feedback" -H "Content-Type: application/json" -d '{"app":"my-app","edition":"en-us","body":"Hello, World!"}'
+```
+
+### Leave feedback via FormData
+```
+curl "http://localhost:8080/feedback" -F 'app=my-app' -F "edition=en-us" -F 'body=Hello, World!'
 ```

@@ -8,8 +8,8 @@ import (
 )
 
 func TestStackSendNoError(t *testing.T) {
-	arr1 := NewArrayNotifier(nil)
-	arr2 := NewArrayNotifier(nil)
+	arr1 := NewArrayNotifier()
+	arr2 := NewArrayNotifier()
 	stack := NewStackNotifier()
 	stack.Add(arr1)
 	stack.Add(arr2)

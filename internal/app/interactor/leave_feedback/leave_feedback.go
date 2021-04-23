@@ -4,17 +4,14 @@ import (
 	"github.com/mingalevme/feedbacker/internal/app"
 	"github.com/mingalevme/feedbacker/internal/app/model"
 	"github.com/mingalevme/feedbacker/internal/app/repository"
-	"github.com/mingalevme/feedbacker/pkg/errutils"
 	"github.com/pkg/errors"
-	"sync"
+	"time"
 )
 
 var ErrUnprocessableEntity = errors.New(repository.ErrUnprocessableEntity.Error())
 
 type LeaveFeedback struct {
 	env app.Env
-	// wg is just for testing
-	wg  sync.WaitGroup
 }
 
 func New(env app.Env) *LeaveFeedback {
@@ -35,18 +32,13 @@ func (s *LeaveFeedback) LeaveFeedback(input LeaveFeedbackData) (model.Feedback, 
 	if err != nil {
 		return f, err
 	}
-	s.wg.Add(1)
-	go func() {
-		defer func() {
-			s.wg.Done()
-			if r := recover(); r != nil {
-				s.env.Logger().WithError(errutils.PanicToError(r)).Fatal("notifying")
-			}
-		}()
-		if err := s.env.Notifier().Notify(f); err != nil {
-			s.env.Logger().WithError(err).Error("notifying")
-		}
-	}()
+	err = s.env.TaskQueue().Enqueue(func() error {
+		time.Sleep(250*time.Millisecond)
+		return s.env.Notifier().Notify(f)
+	})
+	if err != nil {
+		s.env.Logger().WithError(err).WithField("feedback", f).Error("Error while enqueueing notifying task")
+	}
 	return f, nil
 }
 

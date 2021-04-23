@@ -19,14 +19,13 @@ type EmailNotifier struct {
 }
 
 func (s *EmailNotifier) Name() string {
-	return "emailer"
+	return "email"
 }
 
 func (s *EmailNotifier) Health() error {
 	return s.sender.Health()
 }
 
-// Sync
 func (s *EmailNotifier) Notify(f model.Feedback) error {
 	s.logger.WithField("_notifier", fmt.Sprintf("%T", s)).Infof("Notifying:\n%s", feedbackToMessage(f, nil))
 	replacement := map[string]interface{}{

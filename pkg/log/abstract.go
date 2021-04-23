@@ -74,4 +74,4 @@ func (s *AbstractLogger) Fatal(args ...interface{}) {
 	s.Log(LevelFatal, args...)
 }
 
-func Close() {}
+func (s *AbstractLogger) Close() {}

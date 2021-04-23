@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -49,6 +50,6 @@ func (s *EchoHTTPServer) ListenAndServe() error {
 	return s.echo.Start(s.address)
 }
 
-func (s *EchoHTTPServer) WaitForShutdown() {
-	waitForShutdown(s.echo.Shutdown)
+func (s *EchoHTTPServer) Shutdown(ctx context.Context) error {
+	return s.echo.Shutdown(ctx)
 }

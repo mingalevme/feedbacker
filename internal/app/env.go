@@ -10,6 +10,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/mingalevme/feedbacker/internal/app/repository"
 	"github.com/mingalevme/feedbacker/internal/app/service/notifier"
+	"github.com/mingalevme/feedbacker/pkg/dispatcher"
 	"github.com/mingalevme/feedbacker/pkg/emailer"
 	"github.com/mingalevme/feedbacker/pkg/envvarbag"
 	"github.com/mingalevme/feedbacker/pkg/log"
@@ -30,14 +31,17 @@ type Env interface {
 	MaxPostRequestBodyLength() uint
 	LogRequests() bool
 
-	FeedbackRepository() repository.Feedback
-
 	Logger() log.Logger
+
+	FeedbackRepository() repository.Feedback
 
 	NotifierEmailFrom() string
 	NotifierEmailTo() string
 	NotifierEmailSubjectTemplate() string
 	Notifier() notifier.Notifier
+
+	Dispatcher() dispatcher.Dispatcher
+	TaskQueue() dispatcher.TaskQueue
 
 	MailSmtpHost() string
 	MailSmtpPort() uint16
@@ -70,6 +74,8 @@ type Env interface {
 type Container struct {
 	EnvVarBag  envvarbag.EnvVarBag
 	logger     log.Logger
+	dispatcher dispatcher.Dispatcher
+	taskQueue  dispatcher.TaskQueue
 	repository repository.Feedback
 	notifier   notifier.Notifier
 	emailer    emailer.EmailSender
@@ -116,6 +122,37 @@ func (s *Container) LogRequests() bool {
 		panic(errors.Wrap(err, "env: parsing HTTP_LOG_REQUESTS to bool"))
 	}
 	return v
+}
+
+func (s *Container) TaskQueue() dispatcher.TaskQueue {
+	if s.taskQueue != nil {
+		return s.taskQueue
+	}
+	s.taskQueue = dispatcher.NewTaskQueue(s.Dispatcher())
+	return s.taskQueue
+}
+
+func (s *Container) Dispatcher() dispatcher.Dispatcher {
+	if s.dispatcher != nil {
+		return s.dispatcher
+	}
+	driver := s.EnvVarBag.Get("DISPATCHER_DRIVER", "chan")
+	if driver == "chan" {
+		queueMaxSize, _ := s.EnvVarBag.GetInt("DISPATCHER_QUEUE_MAX_SIZE", 100)
+		workersCount, _ := s.EnvVarBag.GetInt("DISPATCHER_WORKER_COUNT", 1)
+		s.dispatcher = dispatcher.NewChanDriver(s.Logger(), queueMaxSize, workersCount)
+	} else if driver == "sync" {
+		s.dispatcher = dispatcher.NewSyncDriver(s.Logger())
+	} else if driver == "go" {
+		s.dispatcher = dispatcher.NewGoDriver(s.Logger())
+	} else if driver == "array" {
+		s.dispatcher = dispatcher.NewArrayDriver()
+	} else if driver == "null" {
+		s.dispatcher = dispatcher.NewNullDriver(s.Logger())
+	} else {
+		panic(errors.Errorf("Unsupported dispatcher driver: %s", driver))
+	}
+	return s.dispatcher
 }
 
 func (s *Container) FeedbackRepository() repository.Feedback {
@@ -291,6 +328,7 @@ func (s *Container) Redis() *redis.Client {
 }
 
 func (s *Container) Build() {
+	s.TaskQueue()
 	s.FeedbackRepository()
 	s.Logger()
 	s.Notifier()

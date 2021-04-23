@@ -5,12 +5,14 @@ import (
 	"github.com/mingalevme/feedbacker/pkg/strutils"
 	"github.com/pkg/errors"
 	"os"
+	"strconv"
 	"strings"
 )
 
 type EnvVarBag interface {
 	Get(key string, fallback string) string
 	Require(key string) string
+	GetInt(key string, fallback int) (int, error)
 	With(values map[string]string) EnvVarBag
 }
 
@@ -33,6 +35,18 @@ func (s *Bag) Require(key string) string {
 		return val
 	} else {
 		panic(errors.Errorf("Missing %s env var", key))
+	}
+}
+
+func (s *Bag) GetInt(key string, fallback int) (int, error) {
+	val, ok := s.storage[key]
+	if !ok {
+		return fallback, nil
+	}
+	if i, err := strconv.ParseInt(val, 10, 0); err != nil {
+		return fallback, err
+	} else {
+		return int(i), nil
 	}
 }
 

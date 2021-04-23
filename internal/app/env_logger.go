@@ -36,6 +36,8 @@ func (s *Container) newLogChannel(channel string) log.Logger {
 		return s.newRollbarLogger()
 	case "stack":
 		return s.newStackLogger()
+	case "array":
+		return log.NewArrayLogger()
 	case "null":
 		return s.newNullLogger()
 	default:

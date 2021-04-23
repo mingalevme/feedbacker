@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	netHTTP "net/http"
 	"time"
 )
@@ -20,6 +21,6 @@ func NewNetHTTPServer(address string, router netHTTP.Handler) *NetHTTPServer {
 	}
 }
 
-func (s *NetHTTPServer) WaitForShutdown() {
-	waitForShutdown(s.Shutdown)
+func (s *NetHTTPServer) Shutdown(ctx context.Context) error {
+	return s.Server.Shutdown(ctx)
 }

@@ -59,9 +59,10 @@ func (s *Health) Health() *HealthData {
 	//
 	wg := &sync.WaitGroup{}
 	//
-	wg.Add(2)
+	wg.Add(3)
 	go s.feedbackRepositoryHealth(wg, h)
 	go s.notifierHealth(wg, h)
+	go s.dispatcherHealth(wg, h)
 	wg.Wait()
 	//
 	h.Output = strings.Trim(h.Output, " ;")
@@ -105,4 +106,23 @@ func (s *Health) notifierHealth(wg *sync.WaitGroup, h *HealthData) {
 		notifierCompDetail.Output = err.Error()
 	}
 	h.AppendComponentDetailData(notifierCompName, notifierCompDetail)
+}
+
+func (s *Health) dispatcherHealth(wg *sync.WaitGroup, h *HealthData) {
+	defer wg.Done()
+	d := s.env.Dispatcher()
+	err := d.Health()
+	compName := fmt.Sprintf("dispatcher/%s", d.Name())
+	compDetail := ComponentDetail{
+		Status:        HealthStatusPass,
+		ComponentType: "component",
+		Time:          timeutils.Now().UTC().Format(time.RFC3339),
+	}
+	if err != nil {
+		h.Status = HealthStatusFail
+		h.Output = fmt.Sprintf("%s; %s: %s", h.Output, compName, err.Error())
+		compDetail.Status = HealthStatusFail
+		compDetail.Output = err.Error()
+	}
+	h.AppendComponentDetailData(compName, compDetail)
 }

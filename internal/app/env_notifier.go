@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/mingalevme/feedbacker/internal/app/service/notifier"
+	"github.com/mingalevme/feedbacker/pkg/log"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -23,8 +24,15 @@ func (s *Container) newNotifierChannel(channel string) notifier.Notifier {
 		channelID := s.EnvVarBag.Require("NOTIFIER_SLACK_CHANNEL_ID")
 		return notifier.NewSlackNotifier(s.Slack(), channelID)
 	}
+	if channel == "log" {
+		level, err := log.ParseLevel(s.EnvVarBag.Get("NOTIFIER_LOG_LEVEL", "debug"))
+		if  err != nil {
+			panic(errors.Errorf("invalid NOTIFIER_LOG_LEVEL env-var"))
+		}
+		return notifier.NewLogNotifier(s.Logger(), level)
+	}
 	if channel == "array" {
-		return notifier.NewArrayNotifier(s.Logger())
+		return notifier.NewArrayNotifier()
 	}
 	if channel == "null" {
 		return notifier.NewNullNotifier()
