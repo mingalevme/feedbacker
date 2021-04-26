@@ -189,7 +189,7 @@ go test -v -cover -tags testing ./...
 ### Docker (build & run)
 
 ```
-docker build -t feedbacker . && docker run -e "PERSISTENCE_DRIVER=array" -e "LOG_CHANNEL=null" -e "NOTIFIER_CHANNEL=null" -e "..." -it feedbacker
+docker build --pull -t feedbacker . && docker run -it -p 8080:8080 -e "PERSISTENCE_DRIVER=array" -e "LOG_CHANNEL=stdout" -e "NOTIFIER_CHANNEL=log" -e "DISPATCHER_DRIVER=chan" -e "DISPATCHER_WORKER_COUNT=2" -e "..." feedbacker
 ```
 
 ## Requests
