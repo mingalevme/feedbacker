@@ -5,7 +5,6 @@ package app
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"github.com/getsentry/sentry-go"
 	"github.com/go-redis/redis/v8"
 	"github.com/mingalevme/feedbacker/internal/app/repository"
@@ -19,8 +18,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rollbar/rollbar-go"
 	"github.com/slack-go/slack"
-	"os"
-	"os/user"
 	"strconv"
 )
 
@@ -206,30 +203,6 @@ func (s *Container) MailSmtpPassword() *string {
 	return &p
 }
 
-func (s *Container) NotifierEmailFrom() string {
-	def := func() string {
-		u, err := user.Current()
-		if err != nil {
-			panic(err)
-		}
-		h, err := os.Hostname()
-		if err != nil {
-			panic(err)
-		}
-		return fmt.Sprintf("%s@%s", u.Username, h)
-	}
-	from := s.EnvVarBag.Get("NOTIFIER_EMAIL_FROM", "")
-	if util.IsEmptyString(from) {
-		return def()
-	}
-	return from
-}
-
-func (s *Container) NotifierEmailTo() string {
-	to := s.EnvVarBag.Require("NOTIFIER_EMAIL_TO")
-	return to
-}
-
 func (s *Container) EmailSender() emailer.EmailSender {
 	if s.emailer != nil {
 		return s.emailer
@@ -237,6 +210,9 @@ func (s *Container) EmailSender() emailer.EmailSender {
 	driver := s.EnvVarBag.Get("EMAILER_DRIVER", "smtp")
 	if driver == "smtp" {
 		s.emailer = emailer.NewSmtpEmailSender(s.MailSmtpHost(), s.MailSmtpPort(), s.MailSmtpUsername(), s.MailSmtpPassword(), s.Logger())
+	} else if driver == "sendmail" {
+		cmd := s.EnvVarBag.Require("EMAILER_SENDMAIL_CMD")
+		s.emailer = emailer.NewSendmailEmailSender(cmd, s.Logger())
 	} else if driver == "array" {
 		s.emailer = emailer.NewArrayEmailSender()
 	} else if driver == "null" {

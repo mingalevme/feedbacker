@@ -1,9 +1,13 @@
 package app
 
 import (
+	"fmt"
 	"github.com/mingalevme/feedbacker/internal/app/service/notifier"
 	"github.com/mingalevme/feedbacker/pkg/log"
+	"github.com/mingalevme/feedbacker/pkg/util"
 	"github.com/pkg/errors"
+	"os"
+	"os/user"
 	"strings"
 )
 
@@ -57,6 +61,30 @@ func (s *Container) newStackNotifier() *notifier.StackNotifier {
 		n.Add(s.newNotifierChannel(channel))
 	}
 	return n
+}
+
+func (s *Container) NotifierEmailFrom() string {
+	def := func() string {
+		u, err := user.Current()
+		if err != nil {
+			panic(err)
+		}
+		h, err := os.Hostname()
+		if err != nil {
+			panic(err)
+		}
+		return fmt.Sprintf("%s@%s", u.Username, h)
+	}
+	from := s.EnvVarBag.Get("NOTIFIER_EMAIL_FROM", "")
+	if util.IsEmptyString(from) {
+		return def()
+	}
+	return from
+}
+
+func (s *Container) NotifierEmailTo() string {
+	to := s.EnvVarBag.Require("NOTIFIER_EMAIL_TO")
+	return to
 }
 
 func (s *Container) NotifierEmailSubjectTemplate() string {

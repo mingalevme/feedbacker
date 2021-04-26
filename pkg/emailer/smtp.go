@@ -27,7 +27,7 @@ func NewSmtpEmailSender(host string, port uint16, username *string, password *st
 		password: password,
 		logger:   log.NewNullLogger(),
 	}
-	if logger == nil {
+	if logger != nil {
 		sender.logger = logger
 	}
 	return sender

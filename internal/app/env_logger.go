@@ -70,14 +70,11 @@ func (s *Container) newNullLogger() log.Logger {
 }
 
 func (s *Container) newStdoutLogger() log.Logger {
-	logrusLogger := logrus.New()
-	logrusLogger.SetOutput(os.Stdout)
-	if level, err := logrus.ParseLevel(s.EnvVarBag.Get("LOG_STDOUT_LEVEL", "debug")); err != nil {
+	if level, err := log.ParseLevel(s.EnvVarBag.Get("LOG_STDOUT_LEVEL", "debug")); err != nil {
 		panic(errors.Wrap(err, "parsing stdout logging level"))
 	} else {
-		logrusLogger.SetLevel(level)
+		return log.NewStdoutLogger(level)
 	}
-	return log.NewLogrusLogger(logrusLogger)
 }
 
 func (s *Container) newStderrLogger() log.Logger {
