@@ -13,7 +13,6 @@ type ChanDriver struct {
 	queue              chan Task
 	queueSize          uint64
 	queueMaxSize       int
-	isQueueOpen        bool
 	isRunning          bool
 	workerCount        int
 	quit               chan bool
