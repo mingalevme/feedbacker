@@ -138,13 +138,14 @@ func (s *Container) Dispatcher() dispatcher.Dispatcher {
 	}
 	driver := s.EnvVarBag.Get("DISPATCHER_DRIVER", "chan")
 	if driver == "chan" {
-		queueMaxSize, _ := s.EnvVarBag.GetInt("DISPATCHER_QUEUE_MAX_SIZE", 100)
-		workersCount, _ := s.EnvVarBag.GetInt("DISPATCHER_WORKER_COUNT", 1)
+		queueMaxSize, _ := s.EnvVarBag.GetInt("DISPATCHER_CHAN_MAX_QUEUE_SIZE", 100)
+		workersCount, _ := s.EnvVarBag.GetInt("DISPATCHER_CHAN_WORKER_COUNT", 1)
 		s.dispatcher = dispatcher.NewChanDriver(s.Logger(), queueMaxSize, workersCount)
 	} else if driver == "sync" {
 		s.dispatcher = dispatcher.NewSyncDriver(s.Logger())
 	} else if driver == "go" {
-		s.dispatcher = dispatcher.NewGoDriver(s.Logger())
+		maxRunningProcessCount, _ := s.EnvVarBag.GetInt("DISPATCHER_GO_MAX_RUNNING_PROCESS_COUNT", 1)
+		s.dispatcher = dispatcher.NewGoDriver(s.Logger(), maxRunningProcessCount)
 	} else if driver == "array" {
 		s.dispatcher = dispatcher.NewArrayDriver()
 	} else if driver == "null" {

@@ -1,7 +1,10 @@
 package dispatcher
 
+import "sync"
+
 type ArrayDriver struct {
 	Storage []Task
+	mu sync.Mutex
 }
 
 func NewArrayDriver() *ArrayDriver {
@@ -15,6 +18,8 @@ func (s *ArrayDriver) Name() string {
 }
 
 func (s *ArrayDriver) Enqueue(t Task) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.Storage = append(s.Storage, t)
 	return nil
 }

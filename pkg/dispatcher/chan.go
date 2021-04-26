@@ -14,10 +14,11 @@ type ChanDriver struct {
 	queueSize          uint64
 	queueMaxSize       int
 	isQueueOpen        bool
+	isRunning          bool
 	workerCount        int
 	quit               chan bool
 	logger             log.Logger
-	wg                 sync.WaitGroup
+	workerWG           sync.WaitGroup
 	runningWorkerCount uint64
 }
 
@@ -28,7 +29,7 @@ func NewChanDriver(logger log.Logger, queueMaxSize int, workersCount int) *ChanD
 	return &ChanDriver{
 		queue:        make(chan Task, queueMaxSize),
 		queueMaxSize: queueMaxSize,
-		isQueueOpen:  true,
+		isRunning:    true,
 		workerCount:  workersCount,
 		quit:         make(chan bool),
 		logger:       logger,
@@ -40,8 +41,8 @@ func (s *ChanDriver) Name() string {
 }
 
 func (s *ChanDriver) Enqueue(t Task) error {
-	if !s.isQueueOpen {
-		return TaskQueueIsExiting
+	if !s.isRunning {
+		return TaskQueueIsStopped
 	}
 	// Do not block if limit has been reached
 	select {
@@ -54,27 +55,33 @@ func (s *ChanDriver) Enqueue(t Task) error {
 }
 
 func (s *ChanDriver) Run() error {
+	wg := sync.WaitGroup{}
 	for i := 1; i < s.workerCount+1; i++ {
-		s.wg.Add(1)
+		s.workerWG.Add(1)
+		wg.Add(1)
 		fmt.Printf("Dispatcher[chan]: Starting worker %d/%d\n", i, s.workerCount)
-		go s.work()
+		go func() {
+			wg.Done()
+			s.work()
+		}()
 	}
+	wg.Wait()
 	return nil
 }
 
 func (s *ChanDriver) work() {
-	defer s.wg.Done()
+	defer s.workerWG.Done()
 	s.incRunningWorkerCount()
 	defer s.decRunningWorkerCount()
 	for {
 		select {
 		case <-s.quit:
-			fmt.Printf("Dispatcher[chan]/worker: Halt signal received, stopping the worker")
+			fmt.Println("Dispatcher[chan]/worker: Halt signal received, stopping the worker")
 			return
 		case t, ok := <-s.queue:
 			if !ok { // channel is closed
 				s.logger.Debug("worker: channel is closed, exiting")
-				fmt.Printf("Dispatcher[chan]/worker: Stop signal received, stopping the worker")
+				fmt.Println("Dispatcher[chan]/worker: Stop signal received, stopping the worker")
 				return
 			}
 			wg := sync.WaitGroup{}
@@ -85,7 +92,7 @@ func (s *ChanDriver) work() {
 					atomic.AddUint64(&s.queueSize, ^uint64(0))
 					defer wg.Done()
 					if r := recover(); r != nil {
-						s.logger.WithError(errutils.PanicToError(r)).Fatal("dispatcher: chan: Error while processing the task")
+						s.logger.WithError(errutils.PanicToError(r)).Fatal("dispatcher[chan]: Error while processing the task")
 					}
 				}()
 				if err := t(); err != nil {
@@ -98,19 +105,19 @@ func (s *ChanDriver) work() {
 }
 
 func (s *ChanDriver) Stop() error {
-	fmt.Printf("Dispatcher[chan]/worker: Stopping workers gracefully")
-	s.isQueueOpen = false
+	fmt.Println("Dispatcher[chan]: Stopping workers gracefully ...")
+	s.isRunning = false
 	close(s.queue)
-	s.wg.Wait()
-	fmt.Printf("Dispatcher[chan]/worker: Workers have been stopped")
+	s.workerWG.Wait()
+	fmt.Println("Dispatcher[chan]: Workers have been stopped")
 	return nil
 }
 
 func (s *ChanDriver) Halt() error {
-	fmt.Printf("Dispatcher[chan]/worker: Halting workers")
+	fmt.Printf("Dispatcher[chan]: Halting workers")
 	s.quit <- false
-	s.wg.Wait()
-	fmt.Printf("Dispatcher[chan]/worker: Workers have been halted")
+	s.workerWG.Wait()
+	fmt.Printf("Dispatcher[chan]: Workers have been halted")
 	return nil
 }
 
@@ -131,14 +138,18 @@ func (s *ChanDriver) QueueSize() int {
 }
 
 func (s *ChanDriver) Health() error {
-	if !s.isQueueOpen {
-		return TaskQueueIsExiting
+	if !s.isRunning {
+		return TaskQueueIsStopped
 	}
 	if s.workerCount != int(s.runningWorkerCount) {
 		return errors.Errorf("dispatcher[chan]: the number of running process (%d) is different than expected (%d)", s.runningWorkerCount, s.workerCount)
 	}
-	if s.QueueSize() > s.queueMaxSize*3/4 {
-		return errors.Errorf("dispatcher[chan]: queue has reached %0.2f%% of capacity", 100*float64(s.QueueSize())/float64(s.queueMaxSize))
+	queueSize := s.QueueSize()
+	if queueSize == s.queueMaxSize {
+		return errors.Errorf("dispatcher[chan]: queue has reached limit (%d)", s.queueMaxSize)
+	}
+	if queueSize > s.queueMaxSize*3/4 {
+		return errors.Errorf("dispatcher[chan]: queue has reached %0.2f%% of capacity", 100*float64(queueSize)/float64(s.queueMaxSize))
 	}
 	return nil
 }

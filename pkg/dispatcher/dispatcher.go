@@ -3,7 +3,7 @@ package dispatcher
 import "github.com/pkg/errors"
 
 var MaxQueueSizeReached = errors.New("maximum queue size has been reached")
-var TaskQueueIsExiting = errors.New("task queue is exiting")
+var TaskQueueIsStopped = errors.New("task queue is stopped")
 
 type Dispatcher interface {
 	Name() string

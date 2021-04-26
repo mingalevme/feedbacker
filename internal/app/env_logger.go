@@ -37,7 +37,11 @@ func (s *Container) newLogChannel(channel string) log.Logger {
 	case "stack":
 		return s.newStackLogger()
 	case "array":
-		return log.NewArrayLogger()
+		if lvl, err := log.ParseLevel(s.EnvVarBag.Get("LOG_ARRAY_LEVEL", "debug")); err != nil {
+			panic(errors.Wrap(err, "parsing LOG_ARRAY_LEVEL-envvar"))
+		} else {
+			return log.NewArrayLogger(lvl)
+		}
 	case "null":
 		return s.newNullLogger()
 	default:

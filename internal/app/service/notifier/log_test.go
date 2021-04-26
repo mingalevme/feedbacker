@@ -10,9 +10,9 @@ import (
 )
 
 func TestLogLogging(t *testing.T) {
-	logger := log.NewArrayLogger()
-	n := NewLogNotifier(logger, log.LevelDebug)
+	l := log.NewArrayLogger(log.LevelDebug)
+	n := NewLogNotifier(l, log.LevelDebug)
 	err := n.Notify(model.MakeFeedback())
 	assert.NoError(t, err)
-	assert.Len(t, logger.Storage, 1)
+	assert.Len(t, l.Storage(), 1)
 }
