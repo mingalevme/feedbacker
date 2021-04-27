@@ -23,8 +23,12 @@ func TestSmtpHealthNoError(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() {
-		_ = l.Close()
+	defer l.Close()
+	go func() {
+		conn, err := l.Accept()
+		assert.NoError(t, err)
+		defer conn.Close()
+		_, err = conn.Write([]byte("220 Ok"))
 	}()
 	smtpEmailSender := NewSmtpEmailSender("127.0.0.1", uint16(49152), nil, nil, nil)
 	err = smtpEmailSender.Health()
