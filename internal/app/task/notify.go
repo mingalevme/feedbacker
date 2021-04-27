@@ -6,7 +6,7 @@ import (
 	"github.com/mingalevme/feedbacker/pkg/dispatcher"
 )
 
-func NewNotifyJob(notifier notifier.Notifier, f model.Feedback) dispatcher.Task {
+func NewNotifyTask(notifier notifier.Notifier, f model.Feedback) dispatcher.Task {
 	return func() error {
 		return notifier.Notify(f)
 	}

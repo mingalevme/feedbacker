@@ -4,8 +4,8 @@ import (
 	"github.com/mingalevme/feedbacker/internal/app"
 	"github.com/mingalevme/feedbacker/internal/app/model"
 	"github.com/mingalevme/feedbacker/internal/app/repository"
+	"github.com/mingalevme/feedbacker/internal/app/task"
 	"github.com/pkg/errors"
-	"time"
 )
 
 var ErrUnprocessableEntity = errors.New(repository.ErrUnprocessableEntity.Error())
@@ -32,10 +32,7 @@ func (s *LeaveFeedback) LeaveFeedback(input LeaveFeedbackData) (model.Feedback, 
 	if err != nil {
 		return f, err
 	}
-	err = s.env.TaskQueue().Enqueue(func() error {
-		time.Sleep(250*time.Millisecond)
-		return s.env.Notifier().Notify(f)
-	})
+	err = s.env.TaskQueue().Enqueue(task.NewNotifyTask(s.env.Notifier(), f))
 	if err != nil {
 		s.env.Logger().WithError(err).WithField("feedback", f).Error("Error while enqueueing notifying task")
 	}
