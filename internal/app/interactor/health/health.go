@@ -53,7 +53,7 @@ func (s *Health) Health() *HealthData {
 	h := &HealthData{
 		Status:      HealthStatusPass,
 		Output:      "",
-		Description: "Feedbacker - Example Go Web application - https://github.com/mingalevme/feedbacker",
+		Description: "Feedbacker - Simple Go Web application",
 		Details:     map[string][]ComponentDetail{},
 	}
 	//

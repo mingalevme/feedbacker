@@ -70,6 +70,8 @@ Example of a simple HTTP API application written in Go (router, database + migra
   - Testing only build (go-) tags: [testing.go](https://github.com/mingalevme/feedbacker/blob/master/internal/app/model/testing.go)
   - [Mocking database](https://github.com/mingalevme/feedbacker/blob/master/internal/app/repository/database_test.go) via [DATA-DOG/go-sqlmock](https://github.com/DATA-DOG/go-sqlmock)
   - [Mocking redis](https://github.com/mingalevme/feedbacker/blob/master/internal/app/repository/redis_test.go) via [elliotchance/redismock](https://github.com/elliotchance/redismock)
+- TODO
+  - Data viewing (!)
 
 # Examples of running PostgreSQL via Docker
 ```
